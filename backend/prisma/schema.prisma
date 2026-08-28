@@ -1,0 +1,291 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PARENT
+  TEACHER
+  ADMIN
+}
+
+enum PublicationStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum AssignmentStatus {
+  TODO
+  COMPLETED
+  OVERDUE
+}
+
+enum NotificationType {
+  ASSIGNMENT
+  EXAM
+  ANNOUNCEMENT
+  MESSAGE
+}
+
+model SchoolYear {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  startsOn  DateTime
+  endsOn    DateTime
+  classes   Class[]
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id            String              @id @default(cuid())
+  email         String              @unique
+  firstName     String
+  lastName      String
+  role          UserRole
+  parentLinks   ParentStudent[]
+  teaching      TeachingAssignment[]
+  assignments   Assignment[]
+  exams         Exam[]
+  parentTasks   ParentTask[]
+  studyPlans    StudyPlan[]        @relation("PlanAuthor")
+  resources     LearningResource[]
+  resourceVotes ResourceHelpfulVote[]
+  sentMessages  Message[]           @relation("SentMessages")
+  memberships   ConversationMember[]
+  notifications Notification[]
+  announcements Announcement[]      @relation("AnnouncementAuthor")
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([role])
+}
+
+model Student {
+  id          String          @id @default(cuid())
+  firstName   String
+  lastName    String
+  classId     String
+  class       Class           @relation(fields: [classId], references: [id])
+  parents     ParentStudent[]
+  assignments Assignment[]
+  exams       Exam[]
+  parentTasks ParentTask[]
+  studyTasks  StudyTask[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model ParentStudent {
+  parentId  String
+  studentId String
+  parent    User    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([parentId, studentId])
+}
+
+model Class {
+  id            String               @id @default(cuid())
+  name          String
+  schoolYearId  String
+  schoolYear    SchoolYear           @relation(fields: [schoolYearId], references: [id])
+  students      Student[]
+  teaching      TeachingAssignment[]
+  assignments   Assignment[]
+  exams         Exam[]
+  announcements Announcement[]
+
+  @@unique([name, schoolYearId])
+}
+
+model Subject {
+  id          String               @id @default(cuid())
+  name        String               @unique
+  teaching    TeachingAssignment[]
+  assignments Assignment[]
+  exams       Exam[]
+  resources   LearningResource[]
+}
+
+model TeachingAssignment {
+  id        String  @id @default(cuid())
+  teacherId String
+  classId   String
+  subjectId String
+  teacher   User    @relation(fields: [teacherId], references: [id])
+  class     Class   @relation(fields: [classId], references: [id])
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  @@unique([teacherId, classId, subjectId])
+}
+
+model Assignment {
+  id            String            @id @default(cuid())
+  title         String
+  description   String
+  dueAt         DateTime
+  status        AssignmentStatus  @default(TODO)
+  publication   PublicationStatus @default(DRAFT)
+  attachmentUrl String?
+  classId       String
+  subjectId     String
+  teacherId     String
+  studentId     String
+  class         Class             @relation(fields: [classId], references: [id])
+  subject       Subject           @relation(fields: [subjectId], references: [id])
+  teacher       User              @relation(fields: [teacherId], references: [id])
+  student       Student           @relation(fields: [studentId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([studentId, dueAt])
+  @@index([teacherId, publication])
+}
+
+model Exam {
+  id               String            @id @default(cuid())
+  title            String
+  description      String?
+  studyMaterialUrl String?
+  startsAt         DateTime
+  publication      PublicationStatus @default(DRAFT)
+  classId          String
+  subjectId        String
+  teacherId        String
+  studentId        String
+  class            Class             @relation(fields: [classId], references: [id])
+  subject          Subject           @relation(fields: [subjectId], references: [id])
+  teacher          User              @relation(fields: [teacherId], references: [id])
+  student          Student           @relation(fields: [studentId], references: [id])
+  topics           ExamTopic[]
+  studyPlans       StudyPlan[]
+
+  @@index([studentId, startsAt])
+}
+
+model ParentTask {
+  id            String   @id @default(cuid())
+  parentId      String
+  studentId     String
+  title         String
+  dueAt         DateTime
+  durationMins  Int?
+  attachmentUrl String?
+  completedAt   DateTime?
+  parent        User     @relation(fields: [parentId], references: [id])
+  student       Student  @relation(fields: [studentId], references: [id])
+  createdAt     DateTime @default(now())
+  @@index([studentId, dueAt])
+}
+
+model ExamTopic {
+  id        String @id @default(cuid())
+  examId    String
+  name      String
+  completed Boolean @default(false)
+  exam      Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
+}
+
+model StudyPlan {
+  id        String      @id @default(cuid())
+  examId    String
+  authorId  String
+  exam      Exam        @relation(fields: [examId], references: [id], onDelete: Cascade)
+  author    User        @relation("PlanAuthor", fields: [authorId], references: [id])
+  tasks     StudyTask[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model StudyTask {
+  id           String    @id @default(cuid())
+  studyPlanId  String
+  studentId    String
+  title        String
+  topic        String?
+  scheduledFor DateTime
+  durationMins Int?
+  resourceUrl  String?
+  completedAt  DateTime?
+  studyPlan    StudyPlan @relation(fields: [studyPlanId], references: [id], onDelete: Cascade)
+  student      Student   @relation(fields: [studentId], references: [id])
+}
+
+model LearningResource {
+  id          String              @id @default(cuid())
+  title       String
+  resourceUrl String?
+  note        String?
+  source      String
+  subjectId   String
+  uploaderId  String
+  subject     Subject             @relation(fields: [subjectId], references: [id])
+  uploader    User                @relation(fields: [uploaderId], references: [id])
+  votes       ResourceHelpfulVote[]
+  createdAt   DateTime            @default(now())
+}
+
+model ResourceHelpfulVote {
+  resourceId String
+  userId     String
+  resource   LearningResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([resourceId, userId])
+}
+
+model Announcement {
+  id          String            @id @default(cuid())
+  title       String
+  body        String
+  publication PublicationStatus @default(DRAFT)
+  authorId    String
+  classId     String?
+  author      User              @relation("AnnouncementAuthor", fields: [authorId], references: [id])
+  class       Class?            @relation(fields: [classId], references: [id])
+  createdAt   DateTime          @default(now())
+}
+
+model Conversation {
+  id        String               @id @default(cuid())
+  members   ConversationMember[]
+  messages  Message[]
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+}
+
+model ConversationMember {
+  conversationId String
+  userId         String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  readAt         DateTime?
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  createdAt      DateTime     @default(now())
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  readAt    DateTime?
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt])
+}
