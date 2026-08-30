@@ -1,12 +1,23 @@
 import { Avatar as MantineAvatar } from "@mantine/core";
 import type { ColorTone } from "../../types/domain";
-interface AvatarProps {
+
+interface Props {
   initials: string;
   tone?: ColorTone;
 }
-export function Avatar({ initials, tone = "navy" }: AvatarProps) {
+const colors: Record<ColorTone, string> = {
+  navy: "dark",
+  coral: "red",
+  sky: "blue",
+  indigo: "indigo",
+  blue: "blue",
+  purple: "violet",
+  orange: "orange",
+  teal: "teal",
+};
+export function Avatar({ initials, tone = "navy" }: Props) {
   return (
-    <MantineAvatar className={"avatar " + tone} radius="xl">
+    <MantineAvatar color={colors[tone]} radius="xl">
       {initials}
     </MantineAvatar>
   );

@@ -1,93 +1,78 @@
-import type { Assignment, Exam } from "../../types/domain";
+import { Badge, Button, Group, Paper, Progress, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { PageHeader } from "../../components/ui/PageHeader";
-import { StatusBadge } from "../../components/ui/StatusBadge";
+import { commonStrings } from "../../shared/strings/common";
+import type { Assignment, Exam } from "../../types/domain";
+import { studentStrings } from "./strings";
+
 interface Props {
   assignments: Assignment[];
   exams: Exam[];
   onComplete: (id: string) => void;
 }
 export function StudentDashboardPage({ assignments, exams, onComplete }: Props) {
-  const completeCount = assignments.filter((assignment) => assignment.status === "הושלם").length;
+  const completed = assignments.filter((item) => item.status === commonStrings.completed).length;
   return (
-    <>
+    <Stack>
       <PageHeader
-        eyebrow="היום שלך"
-        title="שלום נועה 👋"
-        description={String(completeCount) + " מתוך " + assignments.length + " משימות הושלמו — ממשיכים בקצב שלך."}
+        eyebrow={studentStrings.eyebrow}
+        title={studentStrings.title}
+        description={studentStrings.completionSummary(completed, assignments.length)}
       />
-      <section className="section attention">
-        <header className="heading">
-          <div>
-            <h2>מה עושים היום?</h2>
-            <p>צעדים קטנים שמקרבים אותך למטרה.</p>
-          </div>
-        </header>
-        {assignments
-          .filter((assignment) => assignment.status !== "הושלם")
-          .map((assignment) => (
-            <article className="attention-row" key={assignment.id}>
+      <Paper withBorder p="lg">
+        <Title order={2} fz="h3">
+          {studentStrings.taskHeading}
+        </Title>
+        <Stack mt="md">
+          {assignments.map((item) => (
+            <Group key={item.id} justify="space-between">
               <div>
-                <span className="tag blue">{assignment.subject}</span>
-                <h3>{assignment.title}</h3>
-                <p>
-                  {assignment.dueLabel} · {assignment.teacher}
-                </p>
+                <Badge color={item.status === "הושלם" ? "teal" : "blue"}>{item.subject}</Badge>
+                <Text fw={700}>{item.title}</Text>
+                <Text c="dimmed" size="sm">
+                  {item.dueLabel}
+                </Text>
               </div>
-              <aside>
-                <StatusBadge status={assignment.status} />
-                {assignment.status === "לביצוע" && (
-                  <button className="link" onClick={() => onComplete(assignment.id)}>
-                    סיימתי ←
-                  </button>
-                )}
-              </aside>
-            </article>
+              {item.status === "לביצוע" && (
+                <Button variant="light" onClick={() => onComplete(item.id)}>
+                  {commonStrings.done}
+                </Button>
+              )}
+            </Group>
           ))}
-      </section>
-      <div className="columns">
-        <section className="section">
-          <header className="heading">
-            <div>
-              <h2>מההורים שלך</h2>
-              <p>משימה אישית שתכננתם יחד.</p>
-            </div>
-          </header>
-          <article className="attention-row">
-            <div>
-              <span className="tag orange">משימת הורה</span>
-              <h3>לתרגל אוצר מילים</h3>
-              <p>היום · 18:00 · 20 דקות</p>
-            </div>
-            <aside>
-              <button className="link">סיימתי ←</button>
-            </aside>
-          </article>
-        </section>
-        <section className="section">
-          <header className="heading">
-            <div>
-              <h2>מבחנים קרובים</h2>
-              <p>ההתקדמות שלך בהכנה.</p>
-            </div>
-          </header>
+        </Stack>
+      </Paper>
+      <SimpleGrid cols={{ base: 1, sm: 2 }}>
+        <Paper withBorder p="lg">
+          <Title order={2} fz="h3">
+            {studentStrings.parentTaskHeading}
+          </Title>
+          <Text fw={700} mt="md">
+            {studentStrings.parentTask}
+          </Text>
+          <Text c="dimmed" size="sm">
+            היום · 18:00 · 20 דקות
+          </Text>
+          <Button variant="light" mt="md">
+            {commonStrings.done}
+          </Button>
+        </Paper>
+        <Paper withBorder p="lg">
+          <Title order={2} fz="h3">
+            {studentStrings.upcomingExams}
+          </Title>
           {exams.slice(0, 1).map((exam) => (
-            <div className="progress" key={exam.id}>
-              <div>
-                <p>
-                  <strong>
-                    {exam.subject}: {exam.title}
-                  </strong>
-                  <span>בעוד 4 ימים</span>
-                </p>
-                <i>
-                  <b style={{ width: "60%" }} />
-                </i>
-              </div>
-              <strong>60%</strong>
-            </div>
+            <Stack key={exam.id} mt="md">
+              <Text fw={700}>
+                {exam.subject}: {exam.title}
+              </Text>
+              <Progress value={60} />
+              <Text c="dimmed" size="sm">
+                {studentStrings.preparation}
+              </Text>
+            </Stack>
           ))}
-        </section>
-      </div>
-    </>
+        </Paper>
+      </SimpleGrid>
+    </Stack>
   );
 }

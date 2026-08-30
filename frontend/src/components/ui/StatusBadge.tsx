@@ -1,12 +1,18 @@
 import { Badge } from "@mantine/core";
+import { commonStrings } from "../../shared/strings/common";
 import type { AssignmentStatus } from "../../types/domain";
-interface StatusBadgeProps {
+
+interface Props {
   status: AssignmentStatus;
 }
-const classNames: Record<AssignmentStatus, string> = { לביצוע: "todo", הושלם: "completed", באיחור: "overdue" };
-export function StatusBadge({ status }: StatusBadgeProps) {
+const colors: Record<AssignmentStatus, string> = {
+  [commonStrings.toDo]: "orange",
+  [commonStrings.completed]: "teal",
+  [commonStrings.overdue]: "red",
+};
+export function StatusBadge({ status }: Props) {
   return (
-    <Badge className={"status " + classNames[status]} variant="light">
+    <Badge color={colors[status]} variant="light">
       {status}
     </Badge>
   );

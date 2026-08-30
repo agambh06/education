@@ -1,34 +1,52 @@
+import { Badge, Box, Button, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 import { PageHeader } from "../../components/ui/PageHeader";
+import { commonStrings } from "../../shared/strings/common";
+import { parentStrings } from "./strings";
 export function CalendarPage() {
-  const dates = Array.from({ length: 31 }, (_, index) => index + 1);
+  const days = Array.from({ length: 31 }, (_, index) => index + 1);
   return (
-    <>
-      <PageHeader eyebrow="לוח זמנים משפחתי" title="לוח שנה" action={<button className="primary">היום</button>} />
-      <div className="legend">
-        ● משימות　 <b>●</b> מבחנים　 <i>●</i> אירועים　 <em>●</em> עדכונים
-      </div>
-      <section className="calendar">
-        <div className="week">
+    <Stack>
+      <PageHeader
+        eyebrow={parentStrings.calendar.eyebrow}
+        title={parentStrings.calendar.title}
+        action={<Button>{commonStrings.today}</Button>}
+      />
+      <Paper withBorder p="md">
+        <SimpleGrid cols={7}>
           {["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"].map((day) => (
-            <b key={day}>{day}</b>
+            <Text key={day} fw={700} ta="center" c="dimmed">
+              {day}
+            </Text>
           ))}
-        </div>
-        <div className="dates">
-          {dates.map((day) => (
-            <div key={day} className={day === 11 ? "today" : ""}>
-              <span>{day}</span>
-              {day === 11 && <small className="blue">נועה: שברים</small>}
+          {days.map((day) => (
+            <Box key={day} mih={90} p="xs" style={{ borderTop: "1px solid var(--mantine-color-gray-3)" }}>
+              <Text fw={day === 11 ? 800 : 500} c={day === 11 ? "indigo" : undefined}>
+                {day}
+              </Text>
+              {day === 11 && (
+                <Badge size="xs" color="blue">
+                  נועה: שברים
+                </Badge>
+              )}
               {day === 13 && (
                 <>
-                  <small className="purple">מבחן במדעים</small>
-                  <small className="orange">עדכון למשפחה</small>
+                  <Badge size="xs" color="violet">
+                    מבחן במדעים
+                  </Badge>
+                  <Badge size="xs" color="orange">
+                    עדכון למשפחה
+                  </Badge>
                 </>
               )}
-              {day === 14 && <small className="green">יום קריאה</small>}
-            </div>
+              {day === 14 && (
+                <Badge size="xs" color="teal">
+                  יום קריאה
+                </Badge>
+              )}
+            </Box>
           ))}
-        </div>
-      </section>
-    </>
+        </SimpleGrid>
+      </Paper>
+    </Stack>
   );
 }

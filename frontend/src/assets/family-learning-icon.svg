@@ -1,0 +1,12 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Family learning</title>
+  <rect width="128" height="128" rx="32" fill="#EEF0FF"/>
+  <path d="M30 41.5C30 37.91 32.91 35 36.5 35H61V84H36.5C32.91 84 30 81.09 30 77.5V41.5Z" fill="#6670DC"/>
+  <path d="M98 41.5C98 37.91 95.09 35 91.5 35H67V84H91.5C95.09 84 98 81.09 98 77.5V41.5Z" fill="#8590F3"/>
+  <path d="M61 43C55.48 39.67 49.25 38 42.8 38C39.6 38 36.46 38.42 33.5 39.22V76.15C36.46 75.36 39.6 74.94 42.8 74.94C49.25 74.94 55.48 76.61 61 79.94V43Z" fill="#F9FAFF"/>
+  <path d="M67 43C72.52 39.67 78.75 38 85.2 38C88.4 38 91.54 38.42 94.5 39.22V76.15C91.54 75.36 88.4 74.94 85.2 74.94C78.75 74.94 72.52 76.61 67 79.94V43Z" fill="#F9FAFF"/>
+  <circle cx="64" cy="94" r="16" fill="#FF936D"/>
+  <circle cx="64" cy="89.5" r="5" fill="white"/>
+  <path d="M55.5 104C56.78 98.98 60.03 96.5 64 96.5C67.97 96.5 71.22 98.98 72.5 104" stroke="white" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M82 29V19M77 24H87" stroke="#35AA8D" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -1,15 +1,41 @@
+import { Avatar, Box, Divider, NavLink, Stack, Text, ThemeIcon } from "@mantine/core";
+import familyLearningIcon from "../../assets/family-learning-icon.svg";
+import { appStrings, navigationStrings } from "../../shared/strings/app";
 import type { AppPage, Role } from "../../types/domain";
-import { Avatar } from "../ui/Avatar";
+
 interface Props {
   role: Role;
   page: AppPage;
   onPageChange: (page: AppPage) => void;
 }
 const nav: Record<Role, AppPage[]> = {
-  parent: ["סקירה", "משימות", "מבחנים", "לוח שנה", "הודעות"],
-  student: ["סקירה", "משימות", "מבחנים", "לוח שנה"],
-  teacher: ["סקירה", "הכיתות שלי", "משימות", "מבחנים", "הודעות"],
-  admin: ["סקירה", "תלמידים", "צוות", "עדכונים", "הגדרות"],
+  parent: [
+    navigationStrings.overview,
+    navigationStrings.assignments,
+    navigationStrings.exams,
+    navigationStrings.calendar,
+    navigationStrings.messages,
+  ],
+  student: [
+    navigationStrings.overview,
+    navigationStrings.assignments,
+    navigationStrings.exams,
+    navigationStrings.calendar,
+  ],
+  teacher: [
+    navigationStrings.overview,
+    navigationStrings.classes,
+    navigationStrings.assignments,
+    navigationStrings.exams,
+    navigationStrings.messages,
+  ],
+  admin: [
+    navigationStrings.overview,
+    navigationStrings.students,
+    navigationStrings.staff,
+    navigationStrings.announcements,
+    appStrings.settings,
+  ],
 };
 const icons: Record<AppPage, string> = {
   סקירה: "⌂",
@@ -25,41 +51,55 @@ const icons: Record<AppPage, string> = {
 };
 export function Sidebar({ role, page, onPageChange }: Props) {
   const label: Record<Role, string> = {
-    parent: "אזור הורים",
-    student: "אזור תלמידים",
-    teacher: "אזור מורים",
-    admin: "אזור הנהלה",
+    parent: appStrings.areas.parent,
+    student: appStrings.areas.student,
+    teacher: appStrings.areas.teacher,
+    admin: appStrings.areas.admin,
   };
   return (
-    <aside className="sidebar">
-      <div className="brand">
-        <i>●</i>סקוּ<span>לי</span>
-      </div>
-      <p className="workspace-label">{label[role]}</p>
-      <nav>
+    <Stack h="100%" p="md">
+      <Box>
+        <Box component="img" src={familyLearningIcon} alt="סקוּלי" w={42} h={42} mb="xs" />
+        <Text fw={800} fz="xl">
+          סקוּ
+          <Text span c="indigo">
+            לי
+          </Text>
+        </Text>
+        <Text c="dimmed" fw={700} size="xs" tt="uppercase" mt="xl">
+          {label[role]}
+        </Text>
+      </Box>
+      <Stack gap={4}>
         {nav[role].map((item) => (
-          <button key={item} className={page === item ? "active" : ""} onClick={() => onPageChange(item)}>
-            <span>{icons[item]}</span>
-            {item}
-            {item === "הודעות" && <b>2</b>}
-          </button>
+          <NavLink
+            key={item}
+            label={item}
+            active={page === item}
+            leftSection={
+              <ThemeIcon size="sm" variant="transparent">
+                {icons[item]}
+              </ThemeIcon>
+            }
+            onClick={() => onPageChange(item)}
+          />
         ))}
-      </nav>
-      <div className="sidebar-bottom">
-        <button>
-          <span>⚙</span>הגדרות
-        </button>
-        <div className="profile">
-          <Avatar initials={role === "student" ? "נכ" : "אכ"} />
-          <div>
-            <strong>{role === "student" ? "נועה כהן" : "אגם כהן"}</strong>
-            <small>
-              חשבון {role === "student" ? "תלמידה" : role === "teacher" ? "מורה" : role === "admin" ? "הנהלה" : "הורה"}
-            </small>
-          </div>
-          <span>⌄</span>
-        </div>
-      </div>
-    </aside>
+      </Stack>
+      <Box mt="auto">
+        <Divider mb="md" />
+        <NavLink label={appStrings.settings} leftSection="⚙" />
+        <Box mt="md">
+          <Avatar color="indigo" radius="xl">
+            אכ
+          </Avatar>
+          <Text fw={700} size="sm" mt={6}>
+            {role === "student" ? "נועה כהן" : "אגם כהן"}
+          </Text>
+          <Text c="dimmed" size="xs">
+            חשבון {role === "student" ? "תלמידה" : role === "teacher" ? "מורה" : "הורה"}
+          </Text>
+        </Box>
+      </Box>
+    </Stack>
   );
 }

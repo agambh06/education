@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
 import { Modal as MantineModal } from "@mantine/core";
+import type { ReactNode } from "react";
+
 interface ModalProps {
   children: ReactNode;
   onClose: () => void;

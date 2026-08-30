@@ -1,6 +1,9 @@
-import type { Assignment, AssignmentStatus, Student } from "../../types/domain";
+import { Button, SimpleGrid, Tabs } from "@mantine/core";
 import { AssignmentCard } from "../../components/assignments/AssignmentCard";
 import { PageHeader } from "../../components/ui/PageHeader";
+import type { Assignment, AssignmentStatus, Student } from "../../types/domain";
+import { parentStrings } from "./strings";
+
 interface Props {
   assignments: Assignment[];
   students: Student[];
@@ -13,20 +16,20 @@ export function AssignmentsPage({ assignments, students, filter, onFilterChange,
   return (
     <>
       <PageHeader
-        eyebrow="למידה משפחתית"
-        title="משימות"
-        description="כאן אפשר לעקוב אחר כל משימה, מועד והישג."
-        action={<button className="primary">◫ הורדת סיכום</button>}
+        eyebrow={parentStrings.assignments.eyebrow}
+        title={parentStrings.assignments.title}
+        description={parentStrings.assignments.description}
+        action={<Button>{parentStrings.assignments.download}</Button>}
       />
-      <div className="tabs">
-        {(["הכול", "לביצוע", "הושלם", "באיחור"] as const).map((item) => (
-          <button key={item} onClick={() => onFilterChange(item)} className={filter === item ? "selected" : ""}>
-            {item}
-            {item === "לביצוע" && <b>3</b>}
-          </button>
-        ))}
-      </div>
-      <div className="assignment-grid">
+      <Tabs value={filter} onChange={(value) => onFilterChange((value ?? "הכול") as "הכול" | AssignmentStatus)} mb="lg">
+        <Tabs.List>
+          <Tabs.Tab value="הכול">הכול</Tabs.Tab>
+          <Tabs.Tab value="לביצוע">לביצוע</Tabs.Tab>
+          <Tabs.Tab value="הושלם">הושלם</Tabs.Tab>
+          <Tabs.Tab value="באיחור">באיחור</Tabs.Tab>
+        </Tabs.List>
+      </Tabs>
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
         {assignments.map((assignment) => (
           <AssignmentCard
             key={assignment.id}
@@ -35,7 +38,7 @@ export function AssignmentsPage({ assignments, students, filter, onFilterChange,
             onComplete={onComplete}
           />
         ))}
-      </div>
+      </SimpleGrid>
     </>
   );
 }

@@ -1,38 +1,59 @@
-import { exams } from "../../data/mockData";
+import { Badge, Box, Button, Card, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { PageHeader } from "../../components/ui/PageHeader";
+import { exams } from "../../data/mockData";
+import { parentStrings } from "./strings";
 export function ExamsPage() {
   return (
-    <>
-      <PageHeader eyebrow="להיות מוכנים" title="מבחנים קרובים" description="כל מה שהילדים צריכים כדי להגיע מוכנים." />
-      <section className="exam-hero">
-        <div>
-          <span className="tag translucent">בעוד יומיים</span>
-          <h2>מדעים: מערכת השמש</h2>
-          <p>נועה · כיתה ו׳1 · המורה רובין</p>
-          <div>◷ יום ד׳, 13 במרץ　 ◴ 10:30　 ⌂ חדר 204</div>
-          <button>לחומרי הלימוד ←</button>
-        </div>
-        <b>◉</b>
-      </section>
-      <div className="exam-list">
+    <Stack gap="lg">
+      <PageHeader {...parentStrings.exams} />
+      <Card bg="violet.7" c="white" radius="lg" padding="xl">
+        <Group justify="space-between">
+          <Box>
+            <Badge color="violet.1" c="violet.9">
+              {parentStrings.exams.inTwoDays}
+            </Badge>
+            <Title order={2} mt="md">
+              מדעים: מערכת השמש
+            </Title>
+            <Text c="violet.1" mt="xs">
+              נועה · כיתה ו׳1 · המורה רובין
+            </Text>
+            <Text mt="lg">◷ יום ד׳, 13 במרץ　 ◴ 10:30　 ⌂ חדר 204</Text>
+            <Button color="white" c="violet.8" mt="lg">
+              {parentStrings.exams.studyMaterials}
+            </Button>
+          </Box>
+          <Text fz={120} opacity={0.2}>
+            ◉
+          </Text>
+        </Group>
+      </Card>
+      <Paper withBorder radius="md">
         {exams.map((exam) => (
-          <article className="exam" key={exam.id}>
-            <b>
-              {exam.dateLabel.split(" ")[0]}
-              <small>מרץ</small>
-            </b>
-            <i className="dot purple" />
-            <div>
-              <span>{exam.subject} · נועה כהן</span>
-              <h3>{exam.title}</h3>
-              <p>
-                {exam.teacher} · {exam.time}
-              </p>
-            </div>
-            <button className="outline">חומרי לימוד</button>
-          </article>
+          <Group
+            key={exam.id}
+            justify="space-between"
+            p="lg"
+            style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
+          >
+            <Group>
+              <Text fw={800} fz="xl">
+                {exam.dateLabel.split(" ")[0]}
+              </Text>
+              <Box>
+                <Text c="dimmed" size="xs">
+                  {exam.subject} · נועה כהן
+                </Text>
+                <Text fw={700}>{exam.title}</Text>
+                <Text c="dimmed" size="sm">
+                  {exam.teacher} · {exam.time}
+                </Text>
+              </Box>
+            </Group>
+            <Button variant="light">{parentStrings.exams.materials}</Button>
+          </Group>
         ))}
-      </div>
-    </>
+      </Paper>
+    </Stack>
   );
 }

@@ -1,218 +1,249 @@
-import type { Assignment, Student } from "../../types/domain";
-import { Avatar } from "../../components/ui/Avatar";
-import { PageHeader } from "../../components/ui/PageHeader";
+import {
+  Alert,
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  Card,
+  Group,
+  Paper,
+  Progress,
+  Select,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { StatCard } from "../../components/dashboard/StatCard";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { ALL_STUDENTS_ID } from "../../constants/app";
+import { commonStrings } from "../../shared/strings/common";
+import type { Assignment, Student } from "../../types/domain";
+import { parentStrings } from "./strings";
 
-interface ParentDashboardPageProps {
+interface Props {
   students: Student[];
   selectedStudentId: string;
   assignments: Assignment[];
   onStudentChange: (id: string) => void;
 }
-export function ParentDashboardPage({
-  students,
-  selectedStudentId,
-  assignments,
-  onStudentChange,
-}: ParentDashboardPageProps) {
+export function ParentDashboardPage({ students, selectedStudentId, assignments, onStudentChange }: Props) {
   const selected = students.find((student) => student.id === selectedStudentId);
-  const toDo = assignments.filter((item) => item.status === "לביצוע").length;
+  const toDo = assignments.filter((item) => item.status === commonStrings.toDo).length;
   return (
-    <>
+    <Stack gap="lg">
       <PageHeader
-        eyebrow="יום שני, 11 במרץ"
-        title="בוקר טוב, אגם 👋"
-        description="הנה כל מה שקורה עם המשפחה שלך היום."
+        eyebrow={parentStrings.dashboard.eyebrow}
+        title={parentStrings.dashboard.title}
+        description={parentStrings.dashboard.description}
         action={
-          <div className="family-select">
-            <Avatar initials={selected?.initials ?? "נ״ד"} tone={selected?.tone ?? "indigo"} />
-            <div>
-              <small>תצוגה</small>
-              <strong>{selected ? selected.firstName : "כל הילדים"}</strong>
-            </div>
-            <select value={selectedStudentId} onChange={(event) => onStudentChange(event.target.value)}>
-              <option value="all">כל הילדים</option>
-              {students.map((student) => (
-                <option key={student.id} value={student.id}>
-                  {student.firstName} {student.lastName}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            w={220}
+            value={selectedStudentId}
+            onChange={(value) => onStudentChange(value ?? ALL_STUDENTS_ID)}
+            data={[
+              { value: ALL_STUDENTS_ID, label: commonStrings.allChildren },
+              ...students.map((student) => ({ value: student.id, label: `${student.firstName} ${student.lastName}` })),
+            ]}
+            leftSection={
+              <Avatar color={selected?.tone === "coral" ? "red" : "blue"} radius="xl">
+                {selected?.initials ?? "נ״ד"}
+              </Avatar>
+            }
+          />
         }
       />
-      <section className="attention-banner">
-        <i>!</i>
-        <div>
-          <strong>יש 3 פריטים שמחכים לתשומת הלב שלך</strong>
-          <p>משימה אחת להגשה מחר ולדניאל יש משימה באיחור.</p>
-        </div>
-        <button>לצפייה ←</button>
-      </section>
-      <div className="stats">
+      <Alert color="orange" title={parentStrings.dashboard.attentionTitle} withCloseButton>
+        {parentStrings.dashboard.attentionDescription}
+      </Alert>
+      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
         <StatCard icon="✓" tone="orange" value={String(toDo)} label="משימות לביצוע" note="אחת להגשה מחר" />
         <StatCard icon="▣" tone="purple" value="2" label="מבחנים קרובים" note="הבא בעוד יומיים" />
         <StatCard icon="✉" tone="blue" value="2" label="הודעות שלא נקראו" note="מהמורה לוי" />
         <StatCard icon="◷" tone="teal" value="4" label="אירועים קרובים" note="השבוע" />
-      </div>
-      <section className="section attention">
-        <SectionHeading title="דורש תשומת לב" sub="דברים חשובים שכדאי לשים לב אליהם." link="לכל הפריטים" />
-        <AttentionRow
-          initials="נכ"
-          tone="coral"
-          badge="משימה להגשה מחר"
-          title="דף תרגול שברים"
-          detail="מתמטיקה · המורה לוי · נועה"
-          date="מחר, 09:00"
-          action="למשימה"
+      </SimpleGrid>
+      <Paper withBorder p="lg" radius="md">
+        <SectionHeader
+          title={parentStrings.dashboard.attentionHeading}
+          sub={parentStrings.dashboard.attentionSubheading}
         />
-        <AttentionRow
-          initials="דכ"
-          tone="sky"
-          badge="משימה באיחור"
-          title="תרגול איות"
-          detail="עברית · המורה בר · דניאל"
-          date="מועד הגשה: 8 במרץ"
-          action="סימון כהושלם"
-          badgeTone="red"
-        />
-        <AttentionRow
-          initials="נכ"
-          tone="coral"
-          badge="מבחן קרוב"
-          title="מדעים: מערכת השמש"
-          detail="מדעים · המורה רובין · נועה"
-          date="ד׳, 13 במרץ · 10:30"
-          action="לפרטים"
-          badgeTone="purple"
-        />
-      </section>
-      <div className="columns">
-        <section className="section">
-          <SectionHeading title="מה בקרוב" sub="לוח הזמנים המשפחתי לשבוע הקרוב." link="ללוח השנה ←" />
-          <Schedule day="11" type="שיעורי בית" title="דף תרגול שברים" detail="נועה · מתמטיקה" />
-          <Schedule day="13" type="מבחן" title="מדעים: מערכת השמש" detail="נועה · 10:30" tone="purple" />
-          <Schedule day="14" type="אירוע בית ספרי" title="יום קריאה משפחתי" detail="כל הילדים · 09:00" tone="green" />
-        </section>
-        <section className="section">
-          <SectionHeading title="התקדמות שבועית" sub="משימות שהושלמו השבוע." />
-          <Progress initials="נכ" tone="coral" child="נועה" value={75} detail="3 מתוך 4 הושלמו" />
-          <Progress initials="דכ" tone="sky" child="דניאל" value={50} detail="2 מתוך 4 הושלמו" />
-          <button className="outline full">למעקב אחר התקדמות</button>
-        </section>
-      </div>
-      <section className="section announcement">
-        <div className="announcement-art">✦</div>
-        <div>
-          <span className="tag blue">עדכון בית ספרי</span>
-          <h3>יום הקריאה המשפחתי יתקיים ביום חמישי</h3>
-          <p>נשמח לפגוש אתכם בספריית בית הספר לסיפורים, פעילויות ואורח מיוחד.</p>
-          <small>פורסם היום על ידי בית ספר וסטוויו</small>
-        </div>
-        <button className="link">לקריאה נוספת ←</button>
-      </section>
-    </>
+        <Stack gap={0}>
+          <Attention
+            badge="משימה להגשה מחר"
+            color="orange"
+            title="דף תרגול שברים"
+            detail="מתמטיקה · המורה לוי · נועה"
+            date="מחר, 09:00"
+          />
+          <Attention
+            badge="משימה באיחור"
+            color="red"
+            title="תרגול איות"
+            detail="עברית · המורה בר · דניאל"
+            date="מועד הגשה: 8 במרץ"
+          />
+          <Attention
+            badge="מבחן קרוב"
+            color="violet"
+            title="מדעים: מערכת השמש"
+            detail="מדעים · המורה רובין · נועה"
+            date="ד׳, 13 במרץ · 10:30"
+          />
+        </Stack>
+      </Paper>
+      <SimpleGrid cols={{ base: 1, md: 2 }}>
+        <Paper withBorder p="lg" radius="md">
+          <SectionHeader
+            title={parentStrings.dashboard.upcomingHeading}
+            sub={parentStrings.dashboard.upcomingSubheading}
+          />
+          <Stack gap="md">
+            <Schedule date="11" type="שיעורי בית" title="דף תרגול שברים" detail="נועה · מתמטיקה" color="blue" />
+            <Schedule date="13" type="מבחן" title="מדעים: מערכת השמש" detail="נועה · 10:30" color="violet" />
+            <Schedule
+              date="14"
+              type="אירוע בית ספרי"
+              title="יום קריאה משפחתי"
+              detail="כל הילדים · 09:00"
+              color="teal"
+            />
+          </Stack>
+        </Paper>
+        <Paper withBorder p="lg" radius="md">
+          <SectionHeader
+            title={parentStrings.dashboard.progressHeading}
+            sub={parentStrings.dashboard.progressSubheading}
+          />
+          <Stack gap="md">
+            <ProgressItem child="נועה" detail="3 מתוך 4 הושלמו" value={75} />
+            <ProgressItem child="דניאל" detail="2 מתוך 4 הושלמו" value={50} />
+          </Stack>
+          <Button fullWidth variant="light" mt="lg">
+            {parentStrings.dashboard.progressAction}
+          </Button>
+        </Paper>
+      </SimpleGrid>
+      <Card withBorder radius="md" padding="lg">
+        <Group wrap="nowrap">
+          <Avatar size="lg" color="indigo" radius="md">
+            ✦
+          </Avatar>
+          <Box>
+            <Badge color="blue" variant="light">
+              {parentStrings.dashboard.announcementLabel}
+            </Badge>
+            <Title order={3} mt="xs">
+              {parentStrings.dashboard.announcementTitle}
+            </Title>
+            <Text c="dimmed" size="sm" mt={4}>
+              {parentStrings.dashboard.announcementText}
+            </Text>
+          </Box>
+          <Button variant="subtle" ms="auto">
+            {parentStrings.dashboard.announcementAction}
+          </Button>
+        </Group>
+      </Card>
+    </Stack>
   );
 }
-function SectionHeading({ title, sub, link }: { title: string; sub: string; link?: string }) {
+function SectionHeader({ title, sub }: { title: string; sub: string }) {
   return (
-    <header className="heading">
-      <div>
-        <h2>{title}</h2>
-        <p>{sub}</p>
-      </div>
-      {link && <button className="link">{link}</button>}
-    </header>
+    <Group justify="space-between" mb="md">
+      <Box>
+        <Title order={2} fz="h3">
+          {title}
+        </Title>
+        <Text c="dimmed" size="sm">
+          {sub}
+        </Text>
+      </Box>
+      <Button variant="subtle" size="compact-sm">
+        {commonStrings.viewAll}
+      </Button>
+    </Group>
   );
 }
-function AttentionRow({
-  initials,
-  tone,
+function Attention({
   badge,
+  color,
   title,
   detail,
   date,
-  action,
-  badgeTone = "orange",
 }: {
-  initials: string;
-  tone: "coral" | "sky";
   badge: string;
+  color: string;
   title: string;
   detail: string;
   date: string;
-  action: string;
-  badgeTone?: "orange" | "red" | "purple";
 }) {
   return (
-    <article className="attention-row">
-      <Avatar initials={initials} tone={tone} />
-      <div>
-        <span className={"tag " + badgeTone}>{badge}</span>
-        <h3>{title}</h3>
-        <p>{detail}</p>
-      </div>
-      <aside>
-        <strong>{date}</strong>
-        <button className="link">{action} ←</button>
-      </aside>
-    </article>
+    <Group justify="space-between" py="sm" style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}>
+      <Box>
+        <Badge color={color} variant="light">
+          {badge}
+        </Badge>
+        <Text fw={700} mt={4}>
+          {title}
+        </Text>
+        <Text c="dimmed" size="sm">
+          {detail}
+        </Text>
+      </Box>
+      <Stack gap={4} align="flex-end">
+        <Text size="xs" fw={700}>
+          {date}
+        </Text>
+        <Button variant="subtle" size="compact-sm">
+          {commonStrings.details}
+        </Button>
+      </Stack>
+    </Group>
   );
 }
 function Schedule({
-  day,
+  date,
   type,
   title,
   detail,
-  tone = "blue",
+  color,
 }: {
-  day: string;
+  date: string;
   type: string;
   title: string;
   detail: string;
-  tone?: "blue" | "purple" | "green";
+  color: string;
 }) {
   return (
-    <div className="schedule">
-      <b>
-        {day}
-        <small>מרץ</small>
-      </b>
-      <i className={tone} />
-      <div>
-        <small>{type}</small>
-        <strong>{title}</strong>
-        <p>{detail}</p>
-      </div>
-    </div>
+    <Group wrap="nowrap">
+      <Text fw={800} c={color} w={36} ta="center">
+        {date}
+        <Text size="xs" c="dimmed">
+          {commonStrings.march}
+        </Text>
+      </Text>
+      <Box style={{ borderInlineStart: `3px solid var(--mantine-color-${color}-5)` }} ps="sm">
+        <Text c="dimmed" size="xs">
+          {type}
+        </Text>
+        <Text fw={700}>{title}</Text>
+        <Text c="dimmed" size="xs">
+          {detail}
+        </Text>
+      </Box>
+    </Group>
   );
 }
-function Progress({
-  initials,
-  tone,
-  child,
-  value,
-  detail,
-}: {
-  initials: string;
-  tone: "coral" | "sky";
-  child: string;
-  value: number;
-  detail: string;
-}) {
+function ProgressItem({ child, detail, value }: { child: string; detail: string; value: number }) {
   return (
-    <div className="progress">
-      <Avatar initials={initials} tone={tone} />
-      <div>
-        <p>
-          <strong>{child}</strong>
-          <span>{detail}</span>
-        </p>
-        <i>
-          <b style={{ width: value + "%" }} />
-        </i>
-      </div>
-      <strong>{value}%</strong>
-    </div>
+    <Box>
+      <Group justify="space-between">
+        <Text fw={700}>{child}</Text>
+        <Text c="dimmed" size="xs">
+          {detail}
+        </Text>
+      </Group>
+      <Progress value={value} mt={6} />
+    </Box>
   );
 }
