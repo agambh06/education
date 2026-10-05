@@ -2,6 +2,7 @@ import { ActionIcon, AppShell, Button, Group, SegmentedControl } from "@mantine/
 import { useDisclosure } from "@mantine/hooks";
 import type { ReactNode } from "react";
 import { Sidebar } from "../components/navigation/Sidebar";
+import { PwaStatus } from "../components/pwa/PwaStatus";
 import { appStrings } from "../shared/strings/app";
 import type { AppPage, Role } from "../types/domain";
 
@@ -58,7 +59,10 @@ export function AppLayout({ children, role, page, darkMode, onRoleChange, onPage
       <AppShell.Navbar>
         <Sidebar role={role} page={page} onPageChange={onPageChange} />
       </AppShell.Navbar>
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main>
+        <PwaStatus />
+        {children}
+      </AppShell.Main>
     </AppShell>
   );
 }

@@ -7,7 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      // Download updates automatically, but let users finish forms before reloading.
+      registerType: "prompt",
+      injectRegister: false,
       includeAssets: ["app-icon.svg", "favicon.ico", "apple-touch-icon-180x180.png"],
       manifest: {
         name: "סקולי | ניהול בית ספר",
@@ -47,8 +49,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+        clientsClaim: true,
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/api(?:\/|$)/],
+        navigateFallbackDenylist: [/^\/api(?:\/|\?|$)/, /\/[^/?]+\.[^/]+(?:\?|$)/],
       },
       devOptions: {
         enabled: false,

@@ -1,4 +1,4 @@
-import { createTheme, MantineProvider } from "@mantine/core";
+import { createTheme, DirectionProvider, MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -22,9 +22,11 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <MantineProvider theme={theme} defaultColorScheme="light">
-      <Notifications position="top-left" />
-      <App />
-    </MantineProvider>
+    <DirectionProvider initialDirection="rtl">
+      <MantineProvider theme={theme} defaultColorScheme="light">
+        <Notifications position="top-left" />
+        <App />
+      </MantineProvider>
+    </DirectionProvider>
   </StrictMode>,
 );
