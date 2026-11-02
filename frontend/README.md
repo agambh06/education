@@ -111,3 +111,25 @@ If an older `autoUpdate` worker is already installed, it may activate the first
 deployment automatically during the transition to this prompt strategy. Test the
 steady-state update flow between two deployments of the new strategy. For a clean
 installation test, use a fresh browser profile or clear this origin's site data.
+
+## Issue #3: repeatable production verification
+
+Run HTTP smoke checks against the stable production origin (no build or browser
+installation is needed for this command):
+
+```powershell
+npm run verify:pwa:production -- https://your-production-domain
+```
+
+The command fetches the deployed HTML, manifest, manifest icons, Apple touch icon,
+service worker, and its Workbox import. It verifies Hebrew identity, standalone
+configuration, PNG signatures/dimensions, worker revalidation headers, deep-link
+routing, and exclusions for API and missing static files. It exits unsuccessfully
+for inaccessible resources, redirects to another origin, or invalid configuration.
+It only makes GET requests and does not deploy or change the site.
+
+HTTP checks cannot prove browser installation, successful worker registration,
+standalone launch, or the update prompt after a deployment. Record those separately
+using the [production verification report](docs/pwa-production-verification.md).
+The `test:pwa` command covers the smoke checker and update-notice callbacks, then
+checks the generated production output. Run `npm run build` before `npm run test:pwa`.
