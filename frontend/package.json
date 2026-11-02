@@ -11,7 +11,8 @@
     "format:check": "biome format src",
     "preview": "vite preview",
     "verify:pwa": "node scripts/verify-pwa.mjs",
-    "test:pwa": "node --test scripts/pwa-status.test.mjs && npm run verify:pwa"
+    "test:pwa": "node --test scripts/pwa-status.test.mjs && npm run verify:pwa",
+    "test:api-config": "node --test scripts/api-config.test.mjs"
   },
   "dependencies": {
     "@mantine/core": "^9.5.2",
