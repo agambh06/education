@@ -76,17 +76,23 @@ Closing every app tab/window can activate a waiting worker without showing a pro
 
 Configure the Vercel project with:
 
-- **Root Directory:** `frontend`
-- **Framework Preset:** Vite
+- **Root Directory:** repository root (clear the existing `frontend` setting)
+- **Framework Preset:** Other
 - **Build Command:** `npm run build`
-- **Output Directory:** `dist`
-- Install development dependencies during the build (including the PWA plugin).
+- **Output Directory:** `frontend/dist`
+- Use the install command in the root `vercel.json` to install both apps' locked
+  dependencies, including development dependencies and the PWA plugin.
+- Set `VITE_API_URL=/api` or remove it to use the production default. Keep the
+  localhost value in `.env.example` for local development only.
+- Set the backend environment variables documented in the root `README.md`.
 
-`frontend/vercel.json` rewrites frontend navigation to `index.html`, excluding
-`/api`, `/api/...`, and file-like paths. Existing static files are served directly.
+The root `vercel.json` sends `/api` and `/api/...` to the Express function and
+rewrites frontend navigation to `index.html`, excluding API and file-like paths.
+Existing static files are served directly.
 `sw.js` must revalidate rather than remain in a stale HTTP cache. This configuration
-does not deploy the Express backend or proxy its API; configure the real backend
-and `VITE_API_URL` separately when integrating it.
+deploys the Express backend through `api/index.mjs`. The production API is
+`https://education-8mju.vercel.app/api`; see the root `README.md` for the project
+settings migration, environment variables, and deployment checks.
 
 After deploying:
 
@@ -95,7 +101,8 @@ After deploying:
    `sw.js` response headers for `Cache-Control: public, max-age=0, must-revalidate`
    and the manifest for `Content-Type: application/manifest+json`.
 2. Open `/assignments` directly and reload: the SPA shell should load. Verify `/api`
-   and `/api/health` do not return the SPA; a 404 is expected until a backend exists.
+   and `/api/health` do not return the SPA: `/api` returns a JSON 404 and
+   `/api/health` returns HTTP 200 with `{"status":"ok"}`.
 3. Repeat the Manifest, Service Workers, Cache Storage, offline, and installation
    checks above. First-time visits without any connection cannot work.
 4. On iPhone, open the HTTPS domain in Safari, choose **Share > Add to Home Screen**,
