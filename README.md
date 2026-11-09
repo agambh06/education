@@ -144,6 +144,7 @@ Run these checks from the repository root after installing dependencies:
 | `npm --prefix frontend run lint` | Current frontend lint script (Oxlint). |
 | `npm --prefix frontend run format:check` | Biome formatting of frontend source, without writing changes. |
 | `npm --prefix frontend exec -- biome check frontend` | Repository-configured Biome lint/format checks for frontend files; run this for frontend code changes as required by the conventions. |
+| `npm --prefix backend test` | Backend API regression tests using the actual Express routes and in-memory demo services. |
 | `npm --prefix frontend run test:pwa` | PWA lifecycle regression tests, then generated PWA artifact verification. Requires a successful frontend build first. |
 | `npm --prefix frontend run verify:pwa` | Artifact verification alone, against the existing `frontend/dist/` build. |
 
@@ -151,7 +152,7 @@ To build one side independently, use `npm --prefix frontend run build` or
 `npm --prefix backend run build`. To apply frontend formatting, use
 `npm --prefix frontend run format` and review the changes.
 
-There is no general `npm test` script, backend test/lint script, or checked-in CI
+There is no root `npm test` script, backend lint script, or checked-in CI
 workflow. PWA artifact checks and lifecycle tests do not replace browser testing.
 Builds do not require a running database; database migration commands do.
 
@@ -169,6 +170,25 @@ installation, and the update prompt. The worker is disabled under
 `npm run dev:frontend`. Localhost is allowed without HTTPS; other devices/origins need
 HTTPS. Follow the [full PWA checklist](frontend/README.md) for browser steps,
 iPhone installation, and a two-build update test.
+
+### Backend API tests
+
+After installing backend dependencies, run from the repository root:
+
+```powershell
+npm --prefix backend test
+```
+
+The suite covers health responses; assignment listing, student filtering, and
+completion, including persistence across requests and repeated completion; exam
+listing, publication, preparation, and study tasks; payload validation; and
+missing resources.
+
+Tests exercise the actual Express routes and in-memory demo services in fresh
+Node test processes. They force dummy environment values before importing the
+application, so no `.env` file, PostgreSQL server, Prisma migrations, or generated
+Prisma client is needed, and they do not touch a personal database. This verifies
+the current demo API; it does not test Prisma-backed persistence.
 
 ## Frontend deployment (Vercel)
 
