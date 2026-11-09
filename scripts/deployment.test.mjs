@@ -6,7 +6,7 @@ import { after, before, test } from "node:test";
 
 const productionOrigin = "https://education-8mju.vercel.app";
 process.env.NODE_ENV = "production";
-process.env.DATABASE_URL = "postgresql://test:test@localhost:5432/education_test";
+delete process.env.DATABASE_URL;
 delete process.env.CORS_ORIGIN;
 
 const { default: app } = await import("../api/index.mjs");
@@ -79,4 +79,16 @@ test("CORS defaults preserve local development and permit explicit overrides", (
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout, expected);
   }
+});
+
+test("an explicitly configured invalid database URL still fails validation", () => {
+  const result = spawnSync(process.execPath, [
+    "--input-type=module", "-e", 'await import("./backend/dist/config/env.js");',
+  ], {
+    cwd: fileURLToPath(new URL("../", import.meta.url)),
+    env: { ...process.env, DATABASE_URL: "invalid-url" },
+    encoding: "utf8",
+  });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /DATABASE_URL/);
 });

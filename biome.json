@@ -3,6 +3,7 @@
   "files": {
     "includes": [
       "frontend/src/**",
+      "frontend/scripts/**",
       "backend/src/**",
       "backend/prisma/**",
       "frontend/package.json",
