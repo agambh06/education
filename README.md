@@ -40,12 +40,13 @@ frontend/
   src/types/             Frontend domain types
   scripts/               PWA lifecycle tests and build-artifact verification
   public/                Icons and static assets
-  vercel.json            Frontend hosting rewrites and PWA headers
 backend/
   src/modules/           Assignment, exam, and notification routes/services
   src/routes/            Health endpoint
   src/config/            Environment validation
   prisma/schema.prisma   PostgreSQL data model
+api/index.mjs            Vercel entry point for the Express API
+vercel.json              Combined frontend/API hosting and PWA headers
 agents/skills/           Repository coding conventions
 ```
 
@@ -91,8 +92,8 @@ HTTP server only, not database connectivity. If you change the frontend origin,
 update `CORS_ORIGIN` in `backend/.env` and restart the backend.
 
 The demo frontend can run independently of the API and database. The demo API
-requires a syntactically valid `DATABASE_URL` at startup, but does not connect to
-PostgreSQL. A running database is needed for Prisma database commands.
+also runs without PostgreSQL. Set `DATABASE_URL` and run a database only for Prisma
+database commands; invalid URLs are rejected when supplied.
 
 ### Environment variables
 
@@ -101,11 +102,11 @@ ignored `.env` files or the hosting provider's environment settings.
 
 | Location | Variable | Requirement/default | Purpose |
 | --- | --- | --- | --- |
-| `frontend/.env` | `VITE_API_URL` | Optional; `http://localhost:4000/api` | Base URL, including `/api`, for the prepared API client. Public, build-time configuration; do not put secrets here. |
-| `backend/.env` | `DATABASE_URL` | Required; no default | PostgreSQL URL, e.g. `postgresql://USER:PASSWORD@localhost:5432/education_web?schema=public`. Required by startup validation even while services use demo data. |
+| `frontend/.env` | `VITE_API_URL` | Optional; localhost in development, `/api` in production | Base URL, including `/api`, for the prepared API client. Public, build-time configuration; do not put secrets here. |
+| `backend/.env` | `DATABASE_URL` | Optional for demo routes; required for Prisma | PostgreSQL connection string. When supplied, it must be a valid URL. |
 | `backend/.env` | `NODE_ENV` | Optional; `development` | One of `development`, `test`, or `production`. Use `production` on a host. |
 | `backend/.env` | `PORT` | Optional; `4000` | Positive integer used by the HTTP listener. |
-| `backend/.env` | `CORS_ORIGIN` | Optional; `http://localhost:5173` | A single allowed frontend origin, including scheme and port when applicable. |
+| `backend/.env` | `CORS_ORIGIN` | Optional; localhost in development, `https://education-8mju.vercel.app` in production | A single allowed frontend origin, including scheme and port when applicable. |
 
 Restart the backend after changing its environment. Restart Vite for local
 frontend changes; rebuild/redeploy for production `VITE_API_URL` changes.
@@ -145,6 +146,7 @@ Run these checks from the repository root after installing dependencies:
 | `npm --prefix frontend run format:check` | Biome formatting of frontend source, without writing changes. |
 | `npm --prefix frontend exec -- biome check frontend` | Repository-configured Biome lint/format checks for frontend files; run this for frontend code changes as required by the conventions. |
 | `npm --prefix frontend run test:pwa` | PWA lifecycle regression tests, then generated PWA artifact verification. Requires a successful frontend build first. |
+| `npm run test:deployment` | API HTTP/CORS/environment checks and Vite API URL regression tests. Run after building. |
 | `npm --prefix frontend run verify:pwa` | Artifact verification alone, against the existing `frontend/dist/` build. |
 
 To build one side independently, use `npm --prefix frontend run build` or
@@ -170,57 +172,66 @@ installation, and the update prompt. The worker is disabled under
 HTTPS. Follow the [full PWA checklist](frontend/README.md) for browser steps,
 iPhone installation, and a two-build update test.
 
-## Frontend deployment (Vercel)
+## Production on Vercel
 
-Import the repository into Vercel with these project settings:
+The production website is https://education-8mju.vercel.app/ and its API base URL
+is https://education-8mju.vercel.app/api. The root `vercel.json` builds both apps,
+serves `frontend/dist`, and routes `/api` and `/api/*` to `api/index.mjs`. This
+entry point exports the existing Express application from `backend/dist/app.js`
+without starting a separate port listener. API paths bypass the SPA fallback.
+
+For the existing Vercel project, change these settings before redeploying:
 
 | Setting | Value |
 | --- | --- |
-| Root Directory | `frontend` |
-| Framework Preset | Vite |
-| Install Command | `npm ci --include=dev` |
-| Build Command | `npm run build` |
-| Output Directory | `dist` |
+| Root Directory | Repository root (clear `frontend`) |
+| Framework Preset | Other |
+| Node.js Version | 22.x or 24.x |
+| Install Command | Use the root `vercel.json` command |
+| Build Command | `npm run build` (from `vercel.json`) |
+| Output Directory | `frontend/dist` (from `vercel.json`) |
 
-Set `VITE_API_URL` in the frontend build environment to the backend's HTTPS base
-URL including `/api` when API integration is implemented, then rebuild. It is
-embedded in the client bundle and is not a runtime server secret.
+Remove any old dashboard command/output overrides that still refer to the
+frontend directory. The configured install command installs both lockfiles,
+including development dependencies needed for TypeScript and the PWA build.
 
-The committed [Vercel configuration](frontend/vercel.json) serves SPA navigation
-through `index.html`, excludes `/api` and file-like paths from that rewrite, and
-sets service-worker revalidation and manifest content-type headers. It deploys
-only the static frontend; it does not host or proxy the Express API.
+Set these environment variables in the Vercel project's **Production** scope:
 
-After deployment, use the stable HTTPS domain to verify:
+| Variable | Value |
+| --- | --- |
+| `NODE_ENV` | `production` |
+| `DATABASE_URL` | Optional for demo routes; set a PostgreSQL URL when using Prisma |
+| `CORS_ORIGIN` | `https://education-8mju.vercel.app` (no trailing slash) |
+| `VITE_API_URL` | `/api`, or remove this variable to use the production default |
 
-1. `/manifest.webmanifest`, `/sw.js`, and manifest icons return their actual files.
-   `sw.js` has `Cache-Control: public, max-age=0, must-revalidate`.
-2. Direct navigation/reload at `/assignments` serves the application shell.
-   Navigation is currently state based, so this path does not select a screen.
-3. `/api` and `/api/health` do not return the SPA HTML. A 404 is expected on the
-   frontend host without separate API routing.
-4. Installation, offline reopening after an online visit, and the update prompt
-   work using the [deployment verification guide](frontend/README.md).
+See `backend/.env.production.example` for backend values. Do not copy local
+`.env` files to production or expose `DATABASE_URL` through a `VITE_` variable.
+The backend validates `DATABASE_URL` when supplied. Its current demo routes work
+without it and keep data in memory; changes to demo data do not persist
+across function instances or deployments. Database integration is separate work.
 
-## Backend and database deployment status
+Redeploy after changing these settings or `VITE_API_URL`: Vite embeds frontend
+environment variables at build time. The default relative `/api` also works on
+preview domains; configure preview environment variables separately if needed.
+For a separately hosted backend, `VITE_API_URL` can instead be its full HTTPS
+base URL ending in `/api`, with backend CORS set to the frontend's origin.
 
-No backend host, hosted database, or backend deployment configuration is defined
-in this repository. Vercel's frontend configuration does not provision them.
+Verify the deployed version:
 
-For an evaluation deployment of the current in-memory API, use a Node host with
-`backend` as its working directory:
+1. Open `/api/health` and confirm HTTP 200 with `{"status":"ok"}` and a JSON content type.
+2. Open `/api/assignments?studentId=noa` and confirm a JSON array.
+3. Request `/api/health` with `Origin: https://education-8mju.vercel.app` and
+   confirm `Access-Control-Allow-Origin: https://education-8mju.vercel.app`.
+4. Open `/api/missing` and confirm a JSON 404, then open `/assignments` and
+   confirm the frontend shell still loads.
+5. From the website's browser console, run
+   `fetch('/api/assignments?studentId=noa').then(r => r.json()).then(console.log)`.
+   Check the Network tab: the request must use the deployed domain over HTTPS.
+   Existing dashboard screens still use demo state; this configuration does not
+   replace that state with API-backed data.
+6. Follow the install, offline, and update checks in `frontend/README.md`.
 
-```powershell
-npm ci --include=dev
-npm run build
-npm run start
-```
-
-Supply `NODE_ENV=production`, the host's `PORT`, a valid `DATABASE_URL`, and
-`CORS_ORIGIN` set to the frontend's HTTPS origin. Expose the API over HTTPS and
-check `/api/health`. API writes remain temporary, and separate instances have
-separate data. Authentication and authorization still need implementation before
-using real school data.
+## Database deployment status
 
 Persistent database deployment remains pending. Once database-backed services and
 versioned migrations are available, the deployment workflow must provision
