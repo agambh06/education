@@ -11,10 +11,13 @@ const { outputText } = ts.transpileModule(source, {
 
 // Run the real component's callbacks with browser and hook boundaries controlled.
 // No worker or network request is made by these lifecycle regression tests.
-function setup({ registered = true } = {}) {
+function setup({ registered = true, online = true, applyError } = {}) {
   const events = new Map();
-  const state = { online: true, visibilityState: "visible", needRefresh: true };
+  const state = { online, visibilityState: "visible", needRefresh: true };
   let updateCalls = 0;
+  const applyCalls = [];
+  const warnings = [];
+  const errors = [];
   let cleanup;
   let interval;
   let clearedInterval;
@@ -52,7 +55,10 @@ function setup({ registered = true } = {}) {
     "virtual:pwa-register/react": {
       useRegisterSW: () => ({
         needRefresh: [state.needRefresh, setNeedRefresh],
-        updateServiceWorker: () => Promise.resolve(),
+        updateServiceWorker: (reload) => {
+          applyCalls.push(reload);
+          return applyError ? Promise.reject(applyError) : Promise.resolve();
+        },
       }),
     },
     "./strings": { pwaStrings: {} },
@@ -85,7 +91,10 @@ function setup({ registered = true } = {}) {
         clearedInterval = id;
       },
     },
-    console,
+    console: {
+      warn: (...args) => warnings.push(args),
+      error: (...args) => errors.push(args),
+    },
   });
   const view = exports.PwaStatus();
   return {
@@ -93,6 +102,9 @@ function setup({ registered = true } = {}) {
     registration,
     events,
     view,
+    applyCalls,
+    warnings,
+    errors,
     check: () => interval(),
     cleanup: () => cleanup(),
     get updateCalls() {
@@ -150,4 +162,50 @@ test("no registered worker means no timer or event listeners", () => {
   const app = setup({ registered: false });
   assert.equal(app.events.size, 0);
   assert.equal(app.updateCalls, 0);
+});
+
+test("updates only activate when the user applies the notice", () => {
+  const app = setup();
+  app.check();
+  assert.deepEqual(app.applyCalls, []);
+  const updateAlert = app.view.props.children.find((child) => child?.props?.withCloseButton);
+  const button = updateAlert.props.children.find((child) => child?.type === "Button");
+  assert.equal(button.props.disabled, false);
+  button.props.onClick();
+  assert.deepEqual(app.applyCalls, [true]);
+});
+
+test("the update action is disabled while offline", () => {
+  const app = setup({ online: false });
+  const updateAlert = app.view.props.children.find((child) => child?.props?.withCloseButton);
+  const button = updateAlert.props.children.find((child) => child?.type === "Button");
+  assert.equal(button.props.disabled, true);
+  assert.deepEqual(app.applyCalls, []);
+});
+
+test("a failed background update check is handled and later checks can retry", async () => {
+  const app = setup();
+  const originalUpdate = app.registration.update;
+  const networkError = new Error("Offline during the update request");
+  app.registration.update = () => Promise.reject(networkError);
+  app.check();
+  await Promise.resolve();
+  assert.equal(app.warnings.length, 1);
+  assert.equal(app.warnings[0][1], networkError);
+  assert.deepEqual(app.applyCalls, []);
+  app.registration.update = originalUpdate;
+  app.check();
+  assert.equal(app.updateCalls, 1);
+});
+
+test("failed update activation is handled without an unhandled rejection", async () => {
+  const applyError = new Error("Worker activation failed");
+  const app = setup({ applyError });
+  const updateAlert = app.view.props.children.find((child) => child?.props?.withCloseButton);
+  const button = updateAlert.props.children.find((child) => child?.type === "Button");
+  button.props.onClick();
+  await Promise.resolve();
+  assert.deepEqual(app.applyCalls, [true]);
+  assert.equal(app.errors.length, 1);
+  assert.equal(app.errors[0][1], applyError);
 });

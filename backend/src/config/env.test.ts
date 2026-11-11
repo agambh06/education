@@ -1,8 +1,28 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { envSchema } from "./env.js";
 
 describe("environment validation", () => {
   const databaseUrl = "postgresql://test:test@localhost:5432/education_web_test";
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("allows the demo API to run without a database URL", () => {
+    expect(envSchema.parse({})).toEqual({
+      NODE_ENV: "development",
+      PORT: 4000,
+      CORS_ORIGIN: "http://localhost:5173",
+    });
+  });
+
+  it("defaults CORS to the deployed frontend in a production environment", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.resetModules();
+    const { envSchema: productionSchema } = await import("./env.js");
+
+    expect(productionSchema.parse({ NODE_ENV: "production" }).CORS_ORIGIN).toBe("https://education-8mju.vercel.app");
+  });
 
   it("accepts a database URL and fills development defaults", () => {
     expect(envSchema.parse({ DATABASE_URL: databaseUrl })).toEqual({
@@ -30,7 +50,6 @@ describe("environment validation", () => {
   });
 
   it.each([
-    {},
     { DATABASE_URL: "not-a-url" },
     { DATABASE_URL: databaseUrl, NODE_ENV: "staging" },
     { DATABASE_URL: databaseUrl, PORT: "0" },

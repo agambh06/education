@@ -14,6 +14,9 @@ app.use("/api/health", healthRouter);
 app.use("/api/assignments", assignmentsRouter);
 app.use("/api/notifications", notificationsRouter);
 app.use("/api/exams", examsRouter);
+app.use("/api", (_request, response) => {
+  response.status(404).json({ message: "API route not found" });
+});
 
 const handleError: ErrorRequestHandler = (error: unknown, _request, response, _next) => {
   const status =

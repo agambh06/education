@@ -3,11 +3,12 @@
   "files": {
     "includes": [
       "frontend/src/**",
+      "frontend/scripts/**",
       "backend/src/**",
       "backend/tests/**",
+      "backend/tsconfig.test.json",
       "backend/prisma/**",
       "backend/vitest*.config.ts",
-      "backend/tsconfig.tests.json",
       "frontend/vitest.config.ts",
       "frontend/package.json",
       "backend/package.json",

@@ -1,31 +1,17 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
+import { verifyManifest, verifyPng } from "./pwa-manifest.mjs";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const manifest = JSON.parse(read("dist/manifest.webmanifest"));
 
-for (const [key, value] of Object.entries({
-  name: "סקולי | ניהול בית ספר",
-  short_name: "סקולי",
-  lang: "he",
-  dir: "rtl",
-  display: "standalone",
-  start_url: "/",
-  scope: "/",
-})) {
-  assert.equal(manifest[key], value, key);
-}
+verifyManifest(manifest);
 
 for (const icon of manifest.icons) {
   const png = readFileSync(new URL(`../dist/${icon.src}`, import.meta.url));
-  assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a", icon.src);
-  assert.equal(icon.type, "image/png");
-  assert.equal(`${png.readUInt32BE(16)}x${png.readUInt32BE(20)}`, icon.sizes, icon.src);
+  verifyPng(png, icon.sizes, icon.src);
 }
-assert(manifest.icons.some((icon) => icon.sizes === "192x192"));
-assert(manifest.icons.some((icon) => icon.sizes === "512x512" && icon.purpose === "any"));
-assert(manifest.icons.some((icon) => icon.sizes === "512x512" && icon.purpose === "maskable"));
 
 // Execute the generated worker configuration with Workbox boundaries captured.
 // This checks build output, including activation and fallback behavior.
@@ -86,8 +72,9 @@ assert(precache.some((entry) => entry.url.endsWith(".js")));
 assert(precache.some((entry) => entry.url.endsWith(".css")));
 assert(!precache.some((entry) => /^\/?api(?:\/|\?|$)/.test(entry.url)));
 
-const vercel = JSON.parse(read("vercel.json"));
-const spaRewrite = new RegExp(`^${vercel.rewrites[0].source}$`);
+const vercel = JSON.parse(read("../vercel.json"));
+assert.deepEqual(vercel.rewrites[0], { source: "/api/:path*", destination: "/api" });
+const spaRewrite = new RegExp(`^${vercel.rewrites.find((rule) => rule.destination === "/index.html").source}$`);
 for (const path of ["/", "/assignments", "/parents/42", "/apiary"]) {
   assert(spaRewrite.test(path), `Vercel must serve the shell for ${path}`);
   assert(!routes[0].denylist.some((pattern) => pattern.test(path)), path);

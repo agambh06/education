@@ -1,7 +1,3 @@
-============================================================
-FILE: agents/skills/frontend-conventions/SKILL.md
-============================================================
-
 ---
 name: frontend-conventions
 description: >
@@ -579,11 +575,21 @@ explicitly requested.
 
 ## 19. Validation
 
+Always add new automated tests when implementing a new frontend issue.
+Cover the issue's acceptance criteria and affected behavior; for bug fixes,
+include a regression test that fails without the fix. Add new test cases to
+existing suites when appropriate rather than requiring a new file for every
+issue. Keep tests independent of personal databases and local developer state.
+
+Run the relevant tests before considering the issue complete and report the
+command and result. If tests cannot be added or run, explain the blocker
+explicitly instead of silently skipping them.
+
 Before considering a frontend coding task complete:
 
 1. Run Biome.
 2. Run the relevant TypeScript type check.
-3. Run relevant automated tests if they exist.
+3. Add and run relevant automated tests for the issue.
 4. Run/build the frontend when practical.
 5. Fix errors introduced by the changes.
 6. Remove unused code and imports.
