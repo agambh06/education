@@ -4,7 +4,11 @@
     "includes": [
       "frontend/src/**",
       "backend/src/**",
+      "backend/tests/**",
       "backend/prisma/**",
+      "backend/vitest*.config.ts",
+      "backend/tsconfig.tests.json",
+      "frontend/vitest.config.ts",
       "frontend/package.json",
       "backend/package.json",
       "package.json"

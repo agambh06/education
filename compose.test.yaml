@@ -1,0 +1,16 @@
+services:
+  test-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: education_test
+      POSTGRES_PASSWORD: education_test
+      POSTGRES_DB: education_web_test
+    ports:
+      - "127.0.0.1:55432:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U education_test -d education_web_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
