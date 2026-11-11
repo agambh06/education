@@ -5,6 +5,8 @@
       "frontend/src/**",
       "frontend/scripts/**",
       "backend/src/**",
+      "backend/tests/**",
+      "backend/tsconfig.test.json",
       "backend/prisma/**",
       "frontend/package.json",
       "backend/package.json",
