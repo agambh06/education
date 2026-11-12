@@ -8,6 +8,8 @@
       "backend/tests/**",
       "backend/tsconfig.test.json",
       "backend/prisma/**",
+      "backend/vitest*.config.ts",
+      "frontend/vitest.config.ts",
       "frontend/package.json",
       "backend/package.json",
       "package.json"
