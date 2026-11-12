@@ -13,7 +13,8 @@
     "verify:pwa": "node scripts/verify-pwa.mjs",
     "test:pwa": "node --test scripts/pwa-status.test.mjs scripts/pwa-production.test.mjs && npm run verify:pwa",
     "verify:pwa:production": "node scripts/verify-pwa-production.mjs",
-    "test:api-config": "node --test scripts/api-config.test.mjs"
+    "test:api-config": "node --test scripts/api-config.test.mjs",
+    "test:parent-progress": "node --test scripts/parent-progress*.test.mjs"
   },
   "dependencies": {
     "@mantine/core": "^9.5.2",
