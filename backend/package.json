@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
+    "test:reminders": "npm run prisma:generate && tsx --test tests/learning-reminders.test.mjs",
     "start": "node dist/server.js",
-    "test": "npm run typecheck:test && tsx --test tests/*.test.ts",
+    "test": "npm run prisma:generate && npm run typecheck:test && tsx --test tests/*.test.ts tests/*.test.mjs",
     "typecheck:test": "tsc --project tsconfig.test.json",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

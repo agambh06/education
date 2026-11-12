@@ -1,10 +1,11 @@
 import cors from "cors";
 import express from "express";
 import { env } from "./config/env.js";
-import { healthRouter } from "./routes/health.routes.js";
 import { assignmentsRouter } from "./modules/assignments/assignments.routes.js";
-import { notificationsRouter } from "./modules/notifications/notifications.routes.js";
 import { examsRouter } from "./modules/exams/exams.routes.js";
+import { learningRemindersRouter } from "./modules/notifications/learning-reminders.routes.js";
+import { notificationsRouter } from "./modules/notifications/notifications.routes.js";
+import { healthRouter } from "./routes/health.routes.js";
 
 export const app = express();
 
@@ -14,6 +15,7 @@ app.use("/api/health", healthRouter);
 app.use("/api/assignments", assignmentsRouter);
 app.use("/api/notifications", notificationsRouter);
 app.use("/api/exams", examsRouter);
+app.use("/api/parent-reminders", learningRemindersRouter);
 app.use("/api", (_request, response) => {
   response.status(404).json({ message: "API route not found" });
 });

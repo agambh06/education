@@ -10,23 +10,34 @@ a PostgreSQL/Prisma data model are maintained alongside it.
 | Layer | Implementation | Current data flow |
 | --- | --- | --- |
 | Frontend | React, TypeScript, Mantine, Vite | Pages and hooks read demo data from `frontend/src/data/mockData.ts`. Navigation and role selection use React state. |
-| API client | `frontend/src/services/` | A typed request helper and assignment service are prepared, but the screens do not call them yet. |
+| API client | `frontend/src/services/` | A typed request helper and assignment service are prepared. The reminders screen reads capability status; existing assignment screens still use demo state. |
 | Backend | Express, TypeScript, Zod | Routes delegate to services with in-memory assignment/exam data; notifications return demo data. Changes reset when the server restarts. |
-| Database | PostgreSQL, Prisma | `backend/prisma/schema.prisma` models users, school years/classes, students, assignments, exams/study plans, resources, messages, and notifications. API services do not yet use Prisma. |
+| Database | PostgreSQL, Prisma | `backend/prisma/schema.prisma` models the school and family data. Assignment/exam services remain in memory; parent reminders include a guarded Prisma preference adapter. |
 
 The UI role switch is a demo control. Authentication and server-side permissions
 are not implemented. A frontend deployment therefore serves the demo UI, and
 setting an API URL alone does not connect it to the backend.
 
-The API exposes `/api/health`, `/api/assignments`, `/api/exams`, and
-`/api/notifications`. Assignment completion, exam publication, preparation, and
-study-task endpoints operate on the backend's in-memory data.
+The API exposes `/api/health`, `/api/assignments`, `/api/exams`,
+`/api/notifications`, and `/api/parent-reminders`. Assignment completion, exam
+publication, preparation, and study-task endpoints operate on the backend's
+in-memory data.
 
 The PWA caches the built application shell and local static assets after an online
 visit. It offers an update prompt before reloading. API responses, writes,
 external Google Fonts, and offline synchronization are not cached or supported.
 See the [frontend PWA guide](frontend/README.md) for the full behavior and browser
 verification steps.
+
+### Parent learning reminders
+
+Issue #38 adds a staged preference and eligibility foundation. Email, push, and
+in-app delivery remain disabled, and the production preference API denies access
+until trusted authentication and active verified parent-child links are connected.
+No scheduler or transport is implemented or selected, and no privacy approval is
+claimed. See the [reminder policy and prerequisites](docs/parent-learning-reminders.md)
+for opt-in defaults, quiet hours, frequency caps, data requirements, and validation
+limits.
 
 ## Project layout
 
@@ -141,13 +152,15 @@ Run these checks from the repository root after installing dependencies:
 
 | Command | What it checks |
 | --- | --- |
-| `npm run build` | Frontend TypeScript/Vite production build, then backend TypeScript compilation. Outputs `frontend/dist/` and `backend/dist/`. |
+| `npm run build` | Frontend TypeScript/Vite production build, then Prisma client generation and backend TypeScript compilation. Outputs `frontend/dist/` and `backend/dist/`. |
 | `npm --prefix frontend run lint` | Current frontend lint script (Oxlint). |
 | `npm --prefix frontend run format:check` | Biome formatting of frontend source, without writing changes. |
 | `npm --prefix frontend exec -- biome check frontend` | Repository-configured Biome lint/format checks for frontend files; run this for frontend code changes as required by the conventions. |
-| `npm --prefix backend test` | Backend API regression tests using the actual Express routes and in-memory demo services. |
+| `npm --prefix backend test` | Prisma generation, test type checking, backend API regressions, and reminder policy/access tests. |
 | `npm --prefix frontend run test:pwa` | PWA lifecycle regression tests, then generated PWA artifact verification. Requires a successful frontend build first. |
 | `npm run test:deployment` | API HTTP/CORS/environment checks and Vite API URL regression tests. Run after building. |
+| `npm --prefix backend run test:reminders` | Prisma generation, reminder policy and preference-access tests, and HTTP denial checks. No database or delivery integration is exercised. |
+| `npm --prefix frontend run test:reminders` | Reminder status API request, disabled defaults, cancellation, and HTTP/network failures. |
 | `npm --prefix frontend run verify:pwa` | Artifact verification alone, against the existing `frontend/dist/` build. |
 
 To build one side independently, use `npm --prefix frontend run build` or
@@ -181,16 +194,26 @@ After installing backend dependencies, run from the repository root:
 npm --prefix backend test
 ```
 
+Backend builds and test commands generate the Prisma client automatically.
+Client generation needs no running database or applied migrations.
+
 The suite covers health responses; assignment listing, student filtering, and
 completion, including persistence across requests and repeated completion; exam
 listing, publication, preparation, and study tasks; payload validation; and
-missing resources.
+missing resources. It also covers reminder consent, access, and eligibility policy.
 
 Tests exercise the actual Express routes and in-memory demo services in fresh
 Node test processes. They force dummy environment values before importing the
-application, so no `.env` file, PostgreSQL server, Prisma migrations, or generated
-Prisma client is needed, and they do not touch a personal database. This verifies
-the current demo API; it does not test Prisma-backed persistence.
+application, so no `.env` file, PostgreSQL server, or Prisma migrations are needed,
+and they do not touch a personal database. A generated Prisma client is required
+because the application imports the guarded reminder preference adapter. This
+suite verifies the current demo API; it does not test Prisma-backed persistence.
+
+Run `npm --prefix backend run test:reminders` for the reminder policy, consent,
+access, and HTTP denial checks separately. That command generates the Prisma client
+and executes TypeScript source through the existing test runner. Its preference tests use an in-memory test store;
+database integration and actual reminder delivery remain unverified. See the
+[reminder validation limits](docs/parent-learning-reminders.md#validation-and-remaining-prerequisites).
 
 ## Production on Vercel
 

@@ -11,10 +11,12 @@ import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
 import { AssignmentsPage } from "./pages/parent/AssignmentsPage";
 import { CalendarPage } from "./pages/parent/CalendarPage";
 import { ExamsPage } from "./pages/parent/ExamsPage";
+import { LearningRemindersPage } from "./pages/parent/LearningRemindersPage";
 import { MessagesPage } from "./pages/parent/MessagesPage";
 import { ParentDashboardPage } from "./pages/parent/ParentDashboardPage";
 import { StudentDashboardPage } from "./pages/student/StudentDashboardPage";
 import { TeacherDashboardPage } from "./pages/teacher/TeacherDashboardPage";
+import { appStrings } from "./shared/strings/app";
 import { commonStrings } from "./shared/strings/common";
 import type { AppPage, AssignmentStatus, Role } from "./types/domain";
 
@@ -88,6 +90,7 @@ function renderParentPage(
   if (page === "מבחנים") return <ExamsPage />;
   if (page === "לוח שנה") return <CalendarPage />;
   if (page === "הודעות") return <MessagesPage />;
+  if (page === appStrings.settings) return <LearningRemindersPage />;
   return (
     <ParentDashboardPage
       students={students}

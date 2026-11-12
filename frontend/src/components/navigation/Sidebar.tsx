@@ -87,7 +87,12 @@ export function Sidebar({ role, page, onPageChange }: Props) {
       </Stack>
       <Box mt="auto">
         <Divider mb="md" />
-        <NavLink label={appStrings.settings} leftSection="⚙" />
+        <NavLink
+          label={appStrings.settings}
+          leftSection="⚙"
+          active={page === appStrings.settings}
+          onClick={() => onPageChange(appStrings.settings)}
+        />
         <Box mt="md">
           <Avatar color="indigo" radius="xl">
             אכ

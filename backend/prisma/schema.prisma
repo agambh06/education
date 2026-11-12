@@ -80,10 +80,28 @@ model Student {
 }
 
 model ParentStudent {
-  parentId  String
-  studentId String
-  parent    User    @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  parentId           String
+  studentId          String
+  verifiedAt         DateTime?
+  revokedAt          DateTime?
+  examsShared        Boolean                    @default(false)
+  activityShared     Boolean                    @default(false)
+  parent             User                       @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  student            Student                    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reminderPreferences LearningReminderPreference?
+
+  @@id([parentId, studentId])
+}
+
+model LearningReminderPreference {
+  parentId       String
+  studentId      String
+  linkVerifiedAt DateTime
+  upcomingExams  Boolean       @default(false)
+  lowActivity    Boolean       @default(false)
+  timeZone       String        @default("Asia/Jerusalem")
+  updatedAt      DateTime      @updatedAt
+  link           ParentStudent @relation(fields: [parentId, studentId], references: [parentId, studentId], onDelete: Cascade)
 
   @@id([parentId, studentId])
 }
