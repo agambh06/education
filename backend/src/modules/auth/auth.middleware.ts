@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 import { prisma } from "../../db.js";
+import type { AuthenticatedPrincipal } from "../../auth/authorization.js";
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;
@@ -19,13 +20,17 @@ export async function resolveAuthenticatedUser(request: Request) {
   if (!token) return null;
   const session = await prisma.session.findUnique({
     where: { tokenHash: createHash("sha256").update(token).digest("hex") },
-    include: { user: { select: { role: true } } },
+    include: { user: { select: { role: true, studentProfile: { select: { id: true } } } } },
   });
   if (!session || session.expiresAt <= new Date()) {
     if (session) await prisma.session.delete({ where: { id: session.id } });
     return null;
   }
-  return { userId: session.userId, role: session.user.role };
+  return {
+    userId: session.userId,
+    role: session.user.role,
+    ...(session.user.studentProfile ? { studentId: session.user.studentProfile.id } : {}),
+  };
 }
 
 export async function resolveAuthenticatedUserId(request: Request) {
@@ -37,6 +42,7 @@ export function requireAuth(resolveUser = resolveAuthenticatedUser) {
     const user = await resolveUser(request);
     if (!user) return response.status(401).json({ message: "Authentication required" });
     request.userId = user.userId;
+    response.locals.principal = user satisfies AuthenticatedPrincipal;
     return next();
   };
 }

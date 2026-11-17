@@ -16,7 +16,9 @@ export function setupTestApi() {
       PORT: "4000",
     });
     const { createApp } = await import("../src/app.js");
-    const app = createApp({ resolveAuthenticatedUser: async () => ({ userId: "test-user", role: "PARENT" }) });
+    const app = createApp({
+      resolveAuthenticatedUser: async () => ({ userId: "test-user", role: "STUDENT", studentId: "noa" }),
+    });
     server = app.listen(0, "127.0.0.1");
     await once(server, "listening");
     const address = server.address();

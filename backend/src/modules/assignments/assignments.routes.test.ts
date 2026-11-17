@@ -22,7 +22,9 @@ describe("assignment API", () => {
     // Each test gets fresh demo data, so completing an assignment cannot affect another test.
     vi.resetModules();
     const { createApp } = await import("../../app.js");
-    app = createApp({ resolveAuthenticatedUser: async () => ({ userId: "test-user", role: "PARENT" }) });
+    app = createApp({
+      resolveAuthenticatedUser: async () => ({ userId: "test-user", role: "STUDENT", studentId: "noa" }),
+    });
     ({ assignmentsService: service } = await import("./assignments.service.js"));
   });
 
@@ -34,25 +36,14 @@ describe("assignment API", () => {
     expect(assignments[0]).toMatchObject({ id: "a1", studentId: "noa", status: "TODO" });
   });
 
-  it("filters assignments by student and returns an empty list for an unknown student", async () => {
+  it("ignores client-supplied student IDs and uses the authenticated student", async () => {
     const matching = await request(app).get("/api/assignments").query({ studentId: "noa" }).expect(200);
     const missing = await request(app).get("/api/assignments").query({ studentId: "other" }).expect(200);
 
     expect(matching.body).toHaveLength(1);
     expect(matching.body.every((assignment: { studentId: string }) => assignment.studentId === "noa")).toBe(true);
-    expect(missing.body).toEqual([]);
+    expect(missing.body).toEqual(matching.body);
   });
-
-  it.each(["studentId=", "studentId=noa&studentId=other"])(
-    "rejects malformed student filters without returning assignments: %s",
-    async (query) => {
-      const list = vi.spyOn(service, "list");
-      const response = await request(app).get(`/api/assignments?${query}`).expect(400);
-
-      expect(response.body.fieldErrors.studentId).toBeDefined();
-      expect(list).not.toHaveBeenCalled();
-    },
-  );
 
   it("completes an assignment and persists its status in subsequent reads", async () => {
     const response = await request(app).patch("/api/assignments/a1/complete").expect(200);
@@ -102,8 +93,24 @@ describe("assignment API", () => {
     },
   );
 
-  // The demo API has no authentication/authorization or persisted assignment ownership yet.
-  it.todo("rejects unauthenticated assignment reads and updates once authentication exists");
-  it.todo("rejects assignment reads and completion for another student once authorization exists");
+  it("does not expose or complete another student's assignment", async () => {
+    const { createApp } = await import("../../app.js");
+    const otherStudentApp = createApp({
+      resolveAuthenticatedUser: async () => ({ userId: "other-user", role: "STUDENT", studentId: "other" }),
+    });
+
+    await request(otherStudentApp).get("/api/assignments").expect(200, []);
+    await request(otherStudentApp)
+      .patch("/api/assignments/a1/complete")
+      .expect(404, { message: "Assignment not found" });
+    expect((await request(app).get("/api/assignments").expect(200)).body[0].status).toBe("TODO");
+  });
+
+  it("rejects assignment access for a parent role", async () => {
+    const { createApp } = await import("../../app.js");
+    const parentApp = createApp({ resolveAuthenticatedUser: async () => ({ userId: "parent-user", role: "PARENT" }) });
+    await request(parentApp).get("/api/assignments").expect(403, { message: "Student access required" });
+  });
+
   it.todo("enforces parent, student, teacher and admin assignment permissions once roles exist");
 });

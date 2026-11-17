@@ -12,7 +12,7 @@ const examInput = {
 };
 const studyTaskInput = { title: "Practice fractions", scheduledFor: "2026-11-10", durationMins: 20 };
 
-test("GET /api/exams lists exams and filters by student", async () => {
+test("GET /api/exams lists only the authenticated student's exams", async () => {
   const exams = await requestJson<DemoExam[]>("/api/exams", 200);
   const seededExam = exams.find((exam) => exam.id === "exam-1");
   assert.deepEqual(seededExam, {
@@ -29,21 +29,29 @@ test("GET /api/exams lists exams and filters by student", async () => {
     ],
   });
   assert.deepEqual(await requestJson("/api/exams?studentId=noa", 200), [seededExam]);
-  assert.deepEqual(await requestJson("/api/exams?studentId=unknown-student", 200), []);
+  assert.deepEqual(await requestJson("/api/exams?studentId=unknown-student", 200), [seededExam]);
 });
 
-test("POST /api/exams publishes exams, defaults topics, and keeps student lists separate", async () => {
+test("POST /api/exams assigns ownership to the authenticated student and defaults topics", async () => {
+  const before = await requestJson<DemoExam[]>("/api/exams", 200);
   const input = { ...examInput, studentId: "published-student" };
   const created = await requestJson<DemoExam>("/api/exams", 201, jsonBody(input));
   assert.match(created.id, /^exam-/);
-  assert.deepEqual(created, { ...input, id: created.id, published: true, topics: [], studyTasks: [] });
+  assert.deepEqual(created, {
+    ...input,
+    studentId: "noa",
+    id: created.id,
+    published: true,
+    topics: [],
+    studyTasks: [],
+  });
   const otherInput = { ...examInput, studentId: "another-student", topics: ["Decimals"] };
   const other = await requestJson<DemoExam>("/api/exams", 201, jsonBody(otherInput));
   assert.notEqual(other.id, created.id);
-  assert.deepEqual(other, { ...otherInput, id: other.id, published: true, studyTasks: [] });
+  assert.deepEqual(other, { ...otherInput, studentId: "noa", id: other.id, published: true, studyTasks: [] });
 
-  assert.deepEqual(await requestJson("/api/exams?studentId=published-student", 200), [created]);
-  assert.deepEqual(await requestJson("/api/exams?studentId=another-student", 200), [other]);
+  assert.deepEqual(await requestJson("/api/exams?studentId=published-student", 200), [...before, created, other]);
+  assert.deepEqual(await requestJson("/api/exams?studentId=another-student", 200), [...before, created, other]);
   assert.deepEqual(await requestJson(`/api/exams/${created.id}/preparation`, 200), created);
   const all = await requestJson<DemoExam[]>("/api/exams", 200);
   assert(all.some((exam) => exam.id === created.id));
@@ -51,11 +59,11 @@ test("POST /api/exams publishes exams, defaults topics, and keeps student lists 
 });
 
 const invalidExams = [
-  { name: "missing required fields", body: {}, fields: ["title", "subject", "classId", "studentId"] },
+  { name: "missing required fields", body: {}, fields: ["title", "subject"] },
   {
     name: "empty required fields",
-    body: { title: "", subject: "", classId: "", studentId: "" },
-    fields: ["title", "subject", "classId", "studentId"],
+    body: { title: "", subject: "" },
+    fields: ["title", "subject"],
   },
   { name: "wrong field types", body: { ...examInput, title: 42, topics: "Fractions" }, fields: ["title", "topics"] },
   { name: "invalid topic items", body: { ...examInput, topics: [42] }, fields: ["topics"] },
@@ -117,11 +125,11 @@ test("missing exams and study tasks return 404 without changing existing exams",
   assert.deepEqual(await requestJson("/api/exams/missing/study-tasks", 404, jsonBody(studyTaskInput)), {
     message: "Exam not found",
   });
-  for (const path of [
-    "/api/exams/missing/study-tasks/study-1/complete",
-    "/api/exams/exam-1/study-tasks/missing/complete",
-  ]) {
-    assert.deepEqual(await requestJson(path, 404, { method: "PATCH" }), { message: "Study task not found" });
-  }
+  assert.deepEqual(await requestJson("/api/exams/missing/study-tasks/study-1/complete", 404, { method: "PATCH" }), {
+    message: "Exam not found",
+  });
+  assert.deepEqual(await requestJson("/api/exams/exam-1/study-tasks/missing/complete", 404, { method: "PATCH" }), {
+    message: "Study task not found",
+  });
   assert.deepEqual(await requestJson("/api/exams", 200), before);
 });

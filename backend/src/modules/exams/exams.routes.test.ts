@@ -31,10 +31,13 @@ describe("exam preparation API", () => {
   beforeEach(async () => {
     vi.resetModules();
     const { createApp } = await import("../../app.js");
-    app = createApp({ resolveAuthenticatedUser: async () => ({ userId: "test-user", role: "PARENT" }) });
+    app = createApp({
+      resolveAuthenticatedUser: async () => ({ userId: "test-user", role: "STUDENT", studentId: "noa" }),
+    });
   });
 
   it("publishes an exam, schedules preparation and completes its study task", async () => {
+    const before = await request(app).get("/api/exams").expect(200);
     const published = await request(app)
       .post("/api/exams")
       .send({
@@ -45,12 +48,12 @@ describe("exam preparation API", () => {
       })
       .expect(201);
     const exam = examSchema.parse(published.body);
-    expect(exam).toMatchObject({ published: true, topics: [], studyTasks: [] });
+    expect(exam).toMatchObject({ published: true, studentId: "noa", topics: [], studyTasks: [] });
 
     const listed = await request(app).get("/api/exams").query({ studentId: "other-student" }).expect(200);
-    expect(listed.body).toEqual([exam]);
+    expect(listed.body).toEqual([...before.body, exam]);
     const otherStudent = await request(app).get("/api/exams").query({ studentId: "noa" }).expect(200);
-    expect(otherStudent.body.some((item: { id: string }) => item.id === exam.id)).toBe(false);
+    expect(otherStudent.body).toEqual(listed.body);
 
     const scheduled = await request(app)
       .post(`/api/exams/${exam.id}/study-tasks`)
@@ -108,6 +111,25 @@ describe("exam preparation API", () => {
       .expect(404, { message: "Study task not found" });
     await request(app)
       .patch("/api/exams/missing/study-tasks/study-1/complete")
-      .expect(404, { message: "Study task not found" });
+      .expect(404, { message: "Exam not found" });
+  });
+
+  it("does not expose or change another student's exam", async () => {
+    const { createApp } = await import("../../app.js");
+    const otherStudentApp = createApp({
+      resolveAuthenticatedUser: async () => ({ userId: "other-user", role: "STUDENT", studentId: "other" }),
+    });
+
+    await request(otherStudentApp).get("/api/exams/exam-1/preparation").expect(404, { message: "Exam not found" });
+    await request(otherStudentApp)
+      .post("/api/exams/exam-1/study-tasks")
+      .send({ title: "Practice", scheduledFor: "Tomorrow", durationMins: 20 })
+      .expect(404, { message: "Exam not found" });
+    await request(otherStudentApp)
+      .patch("/api/exams/exam-1/study-tasks/study-1/complete")
+      .expect(404, { message: "Exam not found" });
+
+    const own = await request(app).get("/api/exams/exam-1/preparation").expect(200);
+    expect(own.body.studyTasks[0].completed).toBe(true);
   });
 });
