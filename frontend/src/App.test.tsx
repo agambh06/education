@@ -1,6 +1,6 @@
 import { DirectionProvider, MantineProvider } from "@mantine/core";
 import { Notifications, notifications } from "@mantine/notifications";
-import { render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
@@ -16,12 +16,21 @@ import { appStrings, navigationStrings } from "./shared/strings/app";
 import { commonStrings } from "./shared/strings/common";
 import type { ParentLearningProgress, ParentLinkedChild } from "./types/parentProgress";
 
+const users = {
+  PARENT: { id: "parent-1", email: "parent@example.com", firstName: "Test", lastName: "Parent", role: "PARENT" },
+  STUDENT: { id: "student-1", email: "student@example.com", firstName: "Test", lastName: "Student", role: "STUDENT" },
+  TEACHER: { id: "teacher-1", email: "teacher@example.com", firstName: "Test", lastName: "Teacher", role: "TEACHER" },
+  ADMIN: { id: "admin-1", email: "admin@example.com", firstName: "Test", lastName: "Admin", role: "ADMIN" },
+} as const;
+let activeUser: (typeof users)[keyof typeof users] = users.PARENT;
+
 function mockParentProgress(
   children: ParentLinkedChild[],
   progressByChild: Record<string, ParentLearningProgress> = {},
 ) {
   const fetchMock = vi.fn<typeof fetch>(async (input) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    if (url.endsWith("/auth/me")) return Response.json({ user: activeUser });
     if (url.endsWith("/parent/children")) return Response.json({ children });
     const child = children.find(({ id }) => url.endsWith(`/parent/children/${id}/learning-progress`));
     if (child && progressByChild[child.id]) return Response.json(progressByChild[child.id]);
@@ -47,7 +56,7 @@ function learningProgress(child: ParentLinkedChild): ParentLearningProgress {
   };
 }
 
-function renderApp() {
+async function renderApp() {
   const user = userEvent.setup();
   render(
     <DirectionProvider initialDirection="rtl">
@@ -57,17 +66,19 @@ function renderApp() {
       </MantineProvider>
     </DirectionProvider>,
   );
+  await screen.findByRole("button", { name: "יציאה" });
   return user;
 }
 
 beforeEach(() => {
   mockParentProgress([]);
+  activeUser = users.PARENT;
 });
 afterEach(() => notifications.clean());
 
 describe("assignment flows", () => {
   it("filters assignments by each status and restores the full list", async () => {
-    const user = renderApp();
+    const user = await renderApp();
     await user.click(screen.getByText(navigationStrings.assignments, { exact: true }));
     for (const assignment of assignments) expect(screen.getByText(assignment.title)).toBeVisible();
 
@@ -90,7 +101,7 @@ describe("assignment flows", () => {
     const noaProgress = learningProgress(noa);
     const danielProgress = learningProgress(daniel);
     mockParentProgress([noa, daniel], { [noa.id]: noaProgress, [daniel.id]: danielProgress });
-    const user = renderApp();
+    const user = await renderApp();
     expect(await screen.findByRole("heading", { name: noaProgress.exams[0].title })).toBeVisible();
     await user.click(screen.getByRole("combobox", { name: parentStrings.dashboard.childLabel }));
     await user.click(screen.getByRole("option", { name: `${daniel.firstName} ${daniel.lastName}` }));
@@ -119,7 +130,7 @@ describe("assignment flows", () => {
   });
 
   it("marks a task complete through the real hook and updates both status tabs", async () => {
-    const user = renderApp();
+    const user = await renderApp();
     await user.click(screen.getByText(navigationStrings.assignments, { exact: true }));
     await user.click(screen.getByRole("tab", { name: commonStrings.toDo }));
     await user.click(screen.getAllByRole("button", { name: commonStrings.markComplete })[0]);
@@ -135,8 +146,8 @@ describe("assignment flows", () => {
   });
 
   it("updates the student's completion summary after completing an assignment", async () => {
-    const user = renderApp();
-    await user.click(screen.getByRole("radio", { name: appStrings.roles.student }));
+    activeUser = users.STUDENT;
+    const user = await renderApp();
     expect(screen.getByText(studentStrings.completionSummary(1, 4))).toBeVisible();
     const tasks = screen.getByRole("heading", { name: studentStrings.taskHeading }).parentElement;
     expect(tasks).not.toBeNull();
@@ -164,7 +175,7 @@ describe("role rendering and navigation", () => {
       return progressFetch(input, options);
     });
     vi.stubGlobal("fetch", fetchMock);
-    const user = renderApp();
+    const user = await renderApp();
     expect(await screen.findByText(parentStrings.dashboard.unlinkedTitle)).toBeVisible();
 
     await user.click(screen.getByText(appStrings.settings, { exact: true }));
@@ -187,11 +198,11 @@ describe("role rendering and navigation", () => {
     expect(screen.queryByRole("heading", { name: learningReminderStrings.header.title })).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
     expect(screen.queryByText(parentStrings.dashboard.recordedData)).not.toBeInTheDocument();
-    expect(progressFetch).toHaveBeenCalledTimes(2);
+    expect(progressFetch.mock.calls.filter(([input]) => String(input).endsWith("/parent/children"))).toHaveLength(2);
   });
 
   it("does not display mock children or a child selector without verified parent links", async () => {
-    renderApp();
+    await renderApp();
     expect(await screen.findByText(parentStrings.dashboard.unlinkedTitle)).toBeVisible();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
     for (const student of students) {
@@ -205,7 +216,7 @@ describe("role rendering and navigation", () => {
     [navigationStrings.calendar, parentStrings.calendar.title],
     [navigationStrings.messages, parentStrings.messages.title],
   ])("opens the parent's %s page and returns to the overview", async (navigation, title) => {
-    const user = renderApp();
+    const user = await renderApp();
     expect(screen.getByRole("heading", { name: parentStrings.dashboard.title })).toBeVisible();
     await user.click(screen.getByText(navigation, { exact: true }));
     expect(screen.getByRole("heading", { name: title })).toBeVisible();
@@ -214,33 +225,31 @@ describe("role rendering and navigation", () => {
     expect(screen.getByRole("heading", { name: parentStrings.dashboard.title })).toBeVisible();
   });
 
-  it("renders each role's dashboard and navigation and resets the parent page on role change", async () => {
-    const user = renderApp();
-    await user.click(screen.getByText(navigationStrings.messages, { exact: true }));
+  it("renders dashboards and navigation from the authenticated role", async () => {
     const roles = [
       {
-        label: appStrings.roles.student,
+        key: "STUDENT" as const,
         title: studentStrings.title,
         area: appStrings.areas.student,
         nav: navigationStrings.calendar,
         unavailable: navigationStrings.messages,
       },
       {
-        label: appStrings.roles.teacher,
+        key: "TEACHER" as const,
         title: teacherStrings.title,
         area: appStrings.areas.teacher,
         nav: navigationStrings.classes,
         unavailable: navigationStrings.calendar,
       },
       {
-        label: appStrings.roles.admin,
+        key: "ADMIN" as const,
         title: adminStrings.title,
         area: appStrings.areas.admin,
         nav: navigationStrings.staff,
         unavailable: navigationStrings.assignments,
       },
       {
-        label: appStrings.roles.parent,
+        key: "PARENT" as const,
         title: parentStrings.dashboard.title,
         area: appStrings.areas.parent,
         nav: navigationStrings.messages,
@@ -248,13 +257,14 @@ describe("role rendering and navigation", () => {
       },
     ];
     for (const role of roles) {
-      await user.click(screen.getByRole("radio", { name: role.label }));
+      cleanup();
+      activeUser = users[role.key];
+      await renderApp();
       expect(screen.getByRole("heading", { name: role.title })).toBeVisible();
       expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
       expect(screen.getByText(role.area)).toBeVisible();
       expect(screen.getByText(role.nav, { exact: true })).toBeVisible();
       expect(screen.queryByText(role.unavailable, { exact: true })).not.toBeInTheDocument();
     }
-    expect(screen.queryByRole("heading", { name: parentStrings.messages.title })).not.toBeInTheDocument();
   });
 });

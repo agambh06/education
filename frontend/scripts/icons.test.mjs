@@ -139,8 +139,9 @@ test("all role sidebars render vector navigation icons and retain Hebrew labels"
       [nav.overview, nav.students, nav.staff, nav.announcements, appStrings.settings],
     ],
   };
+  const user = { id: "user-1", email: "user@example.com", firstName: "Test", lastName: "User", role: "PARENT" };
   for (const [role, [icons, labels]] of Object.entries(roles)) {
-    const html = render(Sidebar, { role, page: nav.overview, onPageChange: noop });
+    const html = render(Sidebar, { role, user, page: nav.overview, onPageChange: noop });
     assertIcons(html, [...icons, "settings"]);
     for (const label of [...labels, appStrings.areas[role]]) assert.ok(html.includes(label), label);
     assert.match(html, /<img[^>]*alt="סקוּלי"/, "The custom brand asset remains available");
@@ -263,9 +264,9 @@ test("layout light and dark controls keep accessible names and distinct SVG icon
     const html = v.render(v.AppLayout, {
       children: "תוכן העמוד",
       role: "parent",
+      user: { id: "user-1", email: "user@example.com", firstName: "Test", lastName: "User", role: "PARENT" },
       page: v.navigationStrings.overview,
       darkMode,
-      onRoleChange: noop,
       onPageChange: noop,
       onThemeToggle: noop,
     });

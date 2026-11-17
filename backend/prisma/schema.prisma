@@ -56,6 +56,7 @@ model SchoolYear {
 model User {
   id                    String                           @id @default(cuid())
   email                 String                           @unique
+  passwordHash          String?
   firstName             String
   lastName              String
   role                  UserRole
@@ -74,10 +75,23 @@ model User {
   memberships           ConversationMember[]
   notifications         Notification[]
   announcements         Announcement[]                   @relation("AnnouncementAuthor")
+  sessions              Session[]
   createdAt             DateTime                         @default(now())
   updatedAt             DateTime                         @updatedAt
 
   @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Student {

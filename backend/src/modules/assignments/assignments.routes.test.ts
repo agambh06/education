@@ -21,7 +21,8 @@ describe("assignment API", () => {
   beforeEach(async () => {
     // Each test gets fresh demo data, so completing an assignment cannot affect another test.
     vi.resetModules();
-    ({ app } = await import("../../app.js"));
+    const { createApp } = await import("../../app.js");
+    app = createApp({ resolveAuthenticatedUser: async () => ({ userId: "test-user", role: "PARENT" }) });
     ({ assignmentsService: service } = await import("./assignments.service.js"));
   });
 

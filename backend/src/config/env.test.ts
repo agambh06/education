@@ -13,6 +13,7 @@ describe("environment validation", () => {
       NODE_ENV: "development",
       PORT: 4000,
       CORS_ORIGIN: "http://localhost:5173",
+      AUTH_COOKIE_SAME_SITE: "lax",
     });
   });
 
@@ -30,13 +31,12 @@ describe("environment validation", () => {
       PORT: 4000,
       DATABASE_URL: databaseUrl,
       CORS_ORIGIN: "http://localhost:5173",
+      AUTH_COOKIE_SAME_SITE: "lax",
     });
   });
 
   it("normalizes a trailing slash from the CORS origin", () => {
-    expect(envSchema.parse({ CORS_ORIGIN: "https://school.example/" }).CORS_ORIGIN).toBe(
-      "https://school.example",
-    );
+    expect(envSchema.parse({ CORS_ORIGIN: "https://school.example/" }).CORS_ORIGIN).toBe("https://school.example");
   });
 
   it("coerces a configured port while preserving explicit environment values", () => {
@@ -52,6 +52,7 @@ describe("environment validation", () => {
       PORT: 4500,
       DATABASE_URL: databaseUrl,
       CORS_ORIGIN: "https://school.example",
+      AUTH_COOKIE_SAME_SITE: "lax",
     });
   });
 

@@ -13,11 +13,13 @@ import {
 } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import familyLearningIcon from "../../assets/family-learning-icon.svg";
+import type { AuthUser } from "../../services/authService";
 import { appStrings, navigationStrings } from "../../shared/strings/app";
 import type { AppPage, Role } from "../../types/domain";
 
 interface Props {
   role: Role;
+  user: AuthUser;
   page: AppPage;
   onPageChange: (page: AppPage) => void;
 }
@@ -62,7 +64,7 @@ const icons: Record<AppPage, ReactNode> = {
   עדכונים: <IconSpeakerphone size={18} stroke={1.75} aria-hidden="true" />,
   הגדרות: <IconSettings size={18} stroke={1.75} aria-hidden="true" />,
 };
-export function Sidebar({ role, page, onPageChange }: Props) {
+export function Sidebar({ role, user, page, onPageChange }: Props) {
   const label: Record<Role, string> = {
     parent: appStrings.areas.parent,
     student: appStrings.areas.student,
@@ -111,13 +113,14 @@ export function Sidebar({ role, page, onPageChange }: Props) {
         />
         <Box mt="md">
           <Avatar color="indigo" radius="xl">
-            אכ
+            {user.firstName.slice(0, 1)}
+            {user.lastName.slice(0, 1)}
           </Avatar>
           <Text fw={700} size="sm" mt={6}>
-            {role === "student" ? "נועה כהן" : "אגם כהן"}
+            {user.firstName} {user.lastName}
           </Text>
           <Text c="dimmed" size="xs">
-            חשבון {role === "student" ? "תלמידה" : role === "teacher" ? "מורה" : "הורה"}
+            {appStrings.account} {appStrings.roles[role]}
           </Text>
         </Box>
       </Box>

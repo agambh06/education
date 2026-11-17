@@ -30,7 +30,8 @@ describe("exam preparation API", () => {
 
   beforeEach(async () => {
     vi.resetModules();
-    ({ app } = await import("../../app.js"));
+    const { createApp } = await import("../../app.js");
+    app = createApp({ resolveAuthenticatedUser: async () => ({ userId: "test-user", role: "PARENT" }) });
   });
 
   it("publishes an exam, schedules preparation and completes its study task", async () => {

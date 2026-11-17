@@ -22,6 +22,7 @@ describe("assignments service", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(`${appConfig.apiUrl}/assignments`, {
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
     });
     await Promise.resolve();
     expect(settled).not.toHaveBeenCalled();
@@ -39,6 +40,7 @@ describe("assignments service", () => {
     expect(fetchMock).toHaveBeenCalledWith(`${appConfig.apiUrl}/assignments/${completed.id}/complete`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
     });
   });
 

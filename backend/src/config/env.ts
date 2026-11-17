@@ -10,6 +10,7 @@ export const envSchema = z.object({
     .url()
     .transform((origin) => origin.replace(/\/+$/, ""))
     .default(process.env.NODE_ENV === "production" ? "https://education-8mju.vercel.app" : "http://localhost:5173"),
+  AUTH_COOKIE_SAME_SITE: z.enum(["lax", "none"]).default("lax"),
 });
 
 export const env = envSchema.parse(process.env);

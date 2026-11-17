@@ -15,7 +15,8 @@ export function setupTestApi() {
       CORS_ORIGIN: "http://localhost:5173",
       PORT: "4000",
     });
-    const { app } = await import("../src/app.js");
+    const { createApp } = await import("../src/app.js");
+    const app = createApp({ resolveAuthenticatedUser: async () => ({ userId: "test-user", role: "PARENT" }) });
     server = app.listen(0, "127.0.0.1");
     await once(server, "listening");
     const address = server.address();

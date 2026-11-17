@@ -1,52 +1,38 @@
-import {
-  ActionIcon,
-  AppShell,
-  Box,
-  Button,
-  Drawer,
-  Flex,
-  Group,
-  SegmentedControl,
-  useMantineTheme,
-} from "@mantine/core";
+import { ActionIcon, AppShell, Button, Drawer, Flex, Group, useMantineTheme } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconBell, IconMenu2, IconMoonStars, IconSun, IconX } from "@tabler/icons-react";
 import { type ReactNode, useEffect } from "react";
 import { Sidebar } from "../components/navigation/Sidebar";
 import { PwaStatus } from "../components/pwa/PwaStatus";
+import type { AuthUser } from "../services/authService";
 import { appStrings } from "../shared/strings/app";
 import type { AppPage, Role } from "../types/domain";
 
 interface Props {
   children: ReactNode;
   role: Role;
+  user: AuthUser;
   page: AppPage;
   darkMode: boolean;
-  onRoleChange: (role: Role) => void;
+  onLogout: () => void;
   onPageChange: (page: AppPage) => void;
   onThemeToggle: () => void;
 }
-const roles: { label: string; value: Role }[] = [
-  { label: appStrings.roles.parent, value: "parent" },
-  { label: appStrings.roles.student, value: "student" },
-  { label: appStrings.roles.teacher, value: "teacher" },
-  { label: appStrings.roles.admin, value: "admin" },
-];
-function toRole(value: string): Role {
-  const role = roles.find((item) => item.value === value);
-  return role?.value ?? "parent";
-}
-export function AppLayout({ children, role, page, darkMode, onRoleChange, onPageChange, onThemeToggle }: Props) {
+
+export function AppLayout({ children, role, user, page, darkMode, onLogout, onPageChange, onThemeToggle }: Props) {
   const [opened, { toggle, close }] = useDisclosure();
   const theme = useMantineTheme();
   const desktop = useMediaQuery(`(min-width: ${theme.breakpoints.md})`);
+
   useEffect(() => {
     if (desktop) close();
   }, [desktop, close]);
+
   const changePage = (nextPage: AppPage) => {
     onPageChange(nextPage);
     close();
   };
+
   return (
     <AppShell
       header={{ height: { base: 112, md: 68 } }}
@@ -95,26 +81,16 @@ export function AppLayout({ children, role, page, darkMode, onRoleChange, onPage
               <IconBell size={20} stroke={1.75} aria-hidden="true" />
             </ActionIcon>
             <Button variant="subtle" size="compact-sm" mih={44} px="xs">
-              {appStrings.userName}
+              {user.firstName} {user.lastName}
+            </Button>
+            <Button variant="light" size="compact-sm" mih={44} px="xs" onClick={onLogout}>
+              {appStrings.logout}
             </Button>
           </Group>
-          <Box w={{ base: "100%", md: "auto" }} miw={0}>
-            <SegmentedControl
-              fullWidth
-              value={role}
-              onChange={(value) => {
-                onRoleChange(toRole(value));
-                close();
-              }}
-              data={roles}
-              aria-label={appStrings.chooseRole}
-              styles={{ label: { minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" } }}
-            />
-          </Box>
         </Flex>
       </AppShell.Header>
       <AppShell.Navbar>
-        <Sidebar role={role} page={page} onPageChange={changePage} />
+        <Sidebar role={role} user={user} page={page} onPageChange={changePage} />
       </AppShell.Navbar>
       <Drawer
         opened={opened && !desktop}
@@ -127,7 +103,7 @@ export function AppLayout({ children, role, page, darkMode, onRoleChange, onPage
         styles={{ inner: { insetInline: 0 } }}
         closeButtonProps={{ "aria-label": appStrings.closeNavigation, size: 44 }}
       >
-        <Sidebar role={role} page={page} onPageChange={changePage} />
+        <Sidebar role={role} user={user} page={page} onPageChange={changePage} />
       </Drawer>
       <AppShell.Main miw={0}>
         <PwaStatus />

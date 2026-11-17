@@ -87,7 +87,7 @@ test("status forwards the caller's signal and propagates cancellation", async ()
   await assert.rejects(pending, (error) => error === controller.signal.reason);
 });
 
-test("HTTP failures reject instead of returning or parsing success status", async () => {
+test("HTTP failures reject with their status instead of returning a success status", async () => {
   for (const status of [401, 403, 503]) {
     let jsonCalls = 0;
     const service = loadService(async () => ({
@@ -104,7 +104,7 @@ test("HTTP failures reject instead of returning or parsing success status", asyn
       (error) =>
         error.name === "ApiError" && error.status === status && error.message === `API request failed: ${status}`,
     );
-    assert.equal(jsonCalls, 0);
+    assert.equal(jsonCalls, 1);
   }
 });
 

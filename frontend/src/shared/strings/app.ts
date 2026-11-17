@@ -21,6 +21,8 @@ export const appStrings = {
   chooseRole: "בחירת תפקיד",
   userName: "אגם כהן",
   notifications: "התראות",
+  logout: "יציאה",
+  account: "חשבון",
 } as const;
 
 export const navigationStrings = {

@@ -9,22 +9,25 @@ a PostgreSQL/Prisma data model are maintained alongside it.
 
 | Layer | Implementation | Current data flow |
 | --- | --- | --- |
-| Frontend | React, TypeScript, Mantine, Vite | Assignment/exam screens use demo data. The parent overview uses a protected aggregate contract with an explicit fictional demo. Navigation and role selection use React state. |
-| API client | `frontend/src/services/` | Typed services handle parent progress requests and reminder capability status. Existing assignment screens still use demo state. |
-| Backend | Express, TypeScript, Zod | Assignments/exams and notifications use demo data. Parent linking and reminder preferences use Prisma behind trusted authentication boundaries. |
-| Database | PostgreSQL, Prisma | Models users, optional student school membership, verified parent links, reminder preferences, and the school/learning domain. Existing demo assignment/exam services remain in memory. |
+| Frontend | React, TypeScript, Mantine, Vite | Email/password sign-in gates the application. Assignment/exam screens use demo data. Parent progress uses a protected aggregate contract with an explicit fictional demo. |
+| API client | `frontend/src/services/` | Typed services include the session cookie and handle authentication, parent progress, and reminder capability status. Existing assignment screens still use demo state. |
+| Backend | Express, TypeScript, Zod | Email/password authentication issues database-backed sessions. Assignments/exams and notifications use demo data. Parent linking and reminder preferences use Prisma behind trusted authentication boundaries. |
+| Database | PostgreSQL, Prisma | Models users, hashed session tokens, optional student school membership, verified parent links, reminder preferences, and the school/learning domain. Existing demo assignment/exam services remain in memory. |
 
-The UI role switch is a demo control. No trusted authentication provider is
-configured, and selecting a role does not authorize parent links, progress, or
-reminder preferences. Setting an API URL alone does not replace demo data with
-protected backend integration.
+Registration creates a parent account. Login sessions use a 14-day HttpOnly
+cookie and store only a SHA-256 hash of the session token. `SameSite=Lax` is the
+default; configure `AUTH_COOKIE_SAME_SITE=none` only when the frontend and API
+are cross-site and served over HTTPS. Authentication does not verify a person's
+identity, establish a parent-child relationship, or replace the reviewed proof
+required by parent-linking routes.
 
 The [verified parent-linking API](backend/docs/parent-linking.md) persists pending,
 verified and revoked relationships. Its routes deny access until a trusted
 authentication adapter is connected; consent eligibility and guardian proof must
 come from reviewed, trusted verification. Existing demo routes remain separate.
 
-The API exposes `/api/health`, `/api/assignments`, `/api/exams`,
+The API exposes `/api/health`, `/api/auth/register`, `/api/auth/login`,
+`/api/auth/me`, `/api/auth/logout`, `/api/assignments`, `/api/exams`,
 `/api/notifications`, `/api/parent-links`, and `/api/parent-reminders`. Assignment
 completion, exam publication, preparation, and study-task endpoints operate on
 the backend's in-memory data.
@@ -130,6 +133,7 @@ ignored `.env` files or the hosting provider's environment settings.
 | `backend/.env` | `NODE_ENV` | Optional; `development` | One of `development`, `test`, or `production`. Use `production` on a host. |
 | `backend/.env` | `PORT` | Optional; `4000` | Positive integer used by the HTTP listener. |
 | `backend/.env` | `CORS_ORIGIN` | Optional; localhost in development, `https://education-8mju.vercel.app` in production | A single allowed frontend origin, including scheme and port when applicable. |
+| `backend/.env` | `AUTH_COOKIE_SAME_SITE` | Optional; `lax` | Cookie cross-site policy. Use `none` only for cross-site HTTPS deployments. |
 
 Restart the backend after changing its environment. Restart Vite for local
 frontend changes; rebuild/redeploy for production `VITE_API_URL` changes.
