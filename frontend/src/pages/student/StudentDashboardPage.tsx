@@ -1,4 +1,5 @@
-import { Badge, Box, Button, Flex, Paper, Progress, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Badge, Button, Group, Paper, Progress, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { IconHandStop } from "@tabler/icons-react";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { commonStrings } from "../../shared/strings/common";
 import type { Assignment, Exam } from "../../types/domain";
@@ -16,6 +17,7 @@ export function StudentDashboardPage({ assignments, exams, onComplete }: Props) 
       <PageHeader
         eyebrow={studentStrings.eyebrow}
         title={studentStrings.title}
+        titleIcon={<IconHandStop size={26} stroke={1.75} aria-hidden="true" />}
         description={studentStrings.completionSummary(completed, assignments.length)}
       />
       <Paper withBorder p={{ base: "md", sm: "lg" }}>

@@ -8,7 +8,7 @@ export const assignmentStrings = {
   descriptionLabel: "תיאור",
   descriptionPlaceholder: "הוסיפו הנחיות לתלמידים ולהורים...",
   dueDateLabel: "תאריך הגשה",
-  addFile: "＋ הוספת קובץ",
+  addFile: "הוספת קובץ",
   saveDraft: "שמירה כטיוטה",
   publish: "פרסום המשימה",
   subjects: ["מתמטיקה", "מדעים", "אנגלית"],

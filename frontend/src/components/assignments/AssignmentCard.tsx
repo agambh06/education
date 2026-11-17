@@ -1,4 +1,5 @@
-import { Box, Button, Card, Group, Stack, Text, ThemeIcon } from "@mantine/core";
+import { Button, Card, Group, Stack, Text, ThemeIcon } from "@mantine/core";
+import { IconArrowLeft, IconBook2, IconClock, IconUser } from "@tabler/icons-react";
 import { commonStrings } from "../../shared/strings/common";
 import type { Assignment } from "../../types/domain";
 import { StatusBadge } from "../ui/StatusBadge";
@@ -24,7 +25,7 @@ export function AssignmentCard({ assignment, studentName, onComplete }: Assignme
       <Stack gap="sm" h="100%">
         <Group justify="space-between">
           <ThemeIcon color={colors[assignment.tone]} variant="light" radius="xl">
-            ●
+            <IconBook2 size={20} stroke={1.75} aria-hidden="true" />
           </ThemeIcon>
           <StatusBadge status={assignment.status} />
         </Group>
@@ -40,19 +41,21 @@ export function AssignmentCard({ assignment, studentName, onComplete }: Assignme
           </Text>
         </Box>
         <Stack gap={4} mt="auto">
-          <Text c="dimmed" size="xs">
-            ◷ {assignment.dueLabel}
-          </Text>
-          <Text c="dimmed" size="xs">
-            ◉ {assignment.teacher}
-          </Text>
+          <Group gap={6} c="dimmed">
+            <IconClock size={16} stroke={1.75} aria-hidden="true" />
+            <Text size="xs">{assignment.dueLabel}</Text>
+          </Group>
+          <Group gap={6} c="dimmed">
+            <IconUser size={16} stroke={1.75} aria-hidden="true" />
+            <Text size="xs">{assignment.teacher}</Text>
+          </Group>
         </Stack>
-        {assignment.status === commonStrings.toDo ? (
-          <Button color="teal" variant="light" mih={{ base: 44, sm: 36 }} onClick={() => onComplete(assignment.id)}>
+        {assignment.status === "לביצוע" ? (
+          <Button color="teal" variant="light" onClick={() => onComplete(assignment.id)}>
             {commonStrings.markComplete}
           </Button>
         ) : (
-          <Button variant="subtle" mih={{ base: 44, sm: 36 }}>
+          <Button variant="subtle" rightSection={<IconArrowLeft size={18} stroke={1.75} aria-hidden="true" />}>
             {commonStrings.details}
           </Button>
         )}

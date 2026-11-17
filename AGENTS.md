@@ -23,6 +23,18 @@ When modifying this repository:
 - Do not create speculative abstractions for possible future requirements.
 - Never claim that a validation command passed unless it was actually run.
 
+## Tests for new issues
+
+- Always add new automated tests when implementing a new issue, covering
+  the issue's acceptance criteria and affected behavior.
+- For bug fixes, include a regression test that fails without the fix.
+- Add new test cases to existing suites when appropriate; a new test file
+  is not required for every issue.
+- Keep tests independent of personal databases and local developer state.
+- Run the relevant tests before considering the issue complete, and report
+  the command and result. If tests cannot be added or run, explain the
+  blocker explicitly instead of silently skipping them.
+
 ## Frontend
 
 When creating, modifying, refactoring, or reviewing frontend code,
