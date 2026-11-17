@@ -14,7 +14,14 @@ export function StatCard({ icon, tone, value, label, note }: StatCardProps) {
   return (
     <Paper withBorder p="md" radius="md" h="100%" miw={0}>
       <Group align="flex-start" wrap="nowrap">
-        <ThemeIcon variant="light" color={colors[tone] ?? "indigo"} size="lg" radius="md" aria-hidden="true" style={{ flexShrink: 0 }}>
+        <ThemeIcon
+          variant="light"
+          color={colors[tone] ?? "indigo"}
+          size="lg"
+          radius="md"
+          aria-hidden="true"
+          style={{ flexShrink: 0 }}
+        >
           {icon}
         </ThemeIcon>
         <Box miw={0} style={{ overflowWrap: "anywhere" }}>

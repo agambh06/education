@@ -1,4 +1,14 @@
-import { ActionIcon, AppShell, Box, Button, Drawer, Flex, Group, SegmentedControl, useMantineTheme } from "@mantine/core";
+import {
+  ActionIcon,
+  AppShell,
+  Box,
+  Button,
+  Drawer,
+  Flex,
+  Group,
+  SegmentedControl,
+  useMantineTheme,
+} from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconBell, IconMenu2, IconMoonStars, IconSun, IconX } from "@tabler/icons-react";
 import { type ReactNode, useEffect } from "react";

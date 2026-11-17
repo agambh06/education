@@ -55,7 +55,11 @@ export function AssignmentCard({ assignment, studentName, onComplete }: Assignme
             {commonStrings.markComplete}
           </Button>
         ) : (
-          <Button variant="subtle" mih={{ base: 44, sm: 36 }} rightSection={<IconArrowLeft size={18} stroke={1.75} aria-hidden="true" />}>
+          <Button
+            variant="subtle"
+            mih={{ base: 44, sm: 36 }}
+            rightSection={<IconArrowLeft size={18} stroke={1.75} aria-hidden="true" />}
+          >
             {commonStrings.details}
           </Button>
         )}

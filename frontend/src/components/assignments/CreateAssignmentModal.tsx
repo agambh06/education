@@ -28,7 +28,11 @@ export function CreateAssignmentModal({ onClose, onPublish }: Props) {
           <Textarea label={forms.descriptionLabel} placeholder={forms.descriptionPlaceholder} minRows={3} />
           <SimpleGrid cols={{ base: 1, xs: 2 }} verticalSpacing="md" style={{ alignItems: "end" }}>
             <TextInput label={forms.dueDateLabel} type="date" required />
-            <Button variant="light" mih={{ base: 44, sm: 36 }} leftSection={<IconPaperclip size={18} stroke={1.75} aria-hidden="true" />}>
+            <Button
+              variant="light"
+              mih={{ base: 44, sm: 36 }}
+              leftSection={<IconPaperclip size={18} stroke={1.75} aria-hidden="true" />}
+            >
               {forms.addFile}
             </Button>
           </SimpleGrid>
@@ -36,7 +40,11 @@ export function CreateAssignmentModal({ onClose, onPublish }: Props) {
             <Button variant="subtle" mih={{ base: 44, sm: 36 }} onClick={onClose}>
               {forms.saveDraft}
             </Button>
-            <Button type="submit" mih={{ base: 44, sm: 36 }} leftSection={<IconPlus size={18} stroke={1.75} aria-hidden="true" />}>
+            <Button
+              type="submit"
+              mih={{ base: 44, sm: 36 }}
+              leftSection={<IconPlus size={18} stroke={1.75} aria-hidden="true" />}
+            >
               {forms.publish}
             </Button>
           </Flex>
