@@ -8,6 +8,7 @@ export const envSchema = z.object({
   CORS_ORIGIN: z
     .string()
     .url()
+    .transform((origin) => origin.replace(/\/+$/, ""))
     .default(process.env.NODE_ENV === "production" ? "https://education-8mju.vercel.app" : "http://localhost:5173"),
 });
 

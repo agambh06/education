@@ -33,6 +33,12 @@ describe("environment validation", () => {
     });
   });
 
+  it("normalizes a trailing slash from the CORS origin", () => {
+    expect(envSchema.parse({ CORS_ORIGIN: "https://school.example/" }).CORS_ORIGIN).toBe(
+      "https://school.example",
+    );
+  });
+
   it("coerces a configured port while preserving explicit environment values", () => {
     expect(
       envSchema.parse({
