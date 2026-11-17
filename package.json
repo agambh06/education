@@ -11,6 +11,9 @@
     "test:backend-deployment": "node --test scripts/deployment.test.mjs scripts/backend-start.test.mjs",
     "test:deployment": "npm run test:backend-deployment && npm --prefix frontend run test:api-config",
     "prisma:generate": "npm --prefix backend run prisma:generate",
-    "prisma:migrate": "npm --prefix backend run prisma:migrate"
+    "prisma:migrate": "npm --prefix backend run prisma:migrate",
+    "prisma:migrate:deploy": "npm --prefix backend run prisma:migrate:deploy",
+    "prisma:migrate:status": "npm --prefix backend run prisma:migrate:status",
+    "db:check": "npm --prefix backend run db:check"
   }
 }

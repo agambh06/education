@@ -168,6 +168,9 @@ Run these checks from the repository root after installing dependencies:
 | Command | What it checks |
 | --- | --- |
 | `npm run build` | Frontend TypeScript/Vite production build, then Prisma client generation and backend TypeScript compilation. Outputs `frontend/dist/` and `backend/dist/`. |
+| `npm run prisma:migrate:deploy` | Apply tracked migrations to the explicitly configured database; no reset or schema generation. |
+| `npm run prisma:migrate:status` | Check tracked migration history on the explicitly configured database. |
+| `npm run db:check` | After building the backend, verify database connectivity, required schema columns, and applied migration history. |
 | `npm --prefix frontend run lint` | Current frontend lint script (Oxlint). |
 | `npm --prefix frontend run format:check` | Biome formatting of frontend source, without writing changes. |
 | `npm --prefix frontend exec -- biome check frontend` | Repository-configured Biome lint/format checks for frontend files; run this for frontend code changes as required by the conventions. |
@@ -276,7 +279,7 @@ dedicated local PostgreSQL database with this exact database name.
 The integration runner requires `TEST_DATABASE_URL` explicitly and never falls
 back to `DATABASE_URL` or `.env`. It rejects remote hosts, other database names,
 and connection parameters that could redirect the connection. Each run creates a
-random schema, applies the existing Prisma schema using `prisma db push`, then
+random schema, applies the tracked migrations using `prisma migrate deploy`, then
 drops only that generated schema during teardown. No migrations or resets run
 against application data. The Docker database uses temporary storage; stopping
 the container discards its data.
@@ -335,7 +338,7 @@ Set these environment variables in the Vercel project's **Production** scope:
 | Variable | Value |
 | --- | --- |
 | `NODE_ENV` | `production` |
-| `DATABASE_URL` | Optional for demo routes; set a PostgreSQL URL when using Prisma |
+| `DATABASE_URL` | Server-only pooled PostgreSQL URL with TLS; required for database readiness and Prisma (demo routes remain available without it) |
 | `CORS_ORIGIN` | `https://education-8mju.vercel.app` (no trailing slash) |
 | `VITE_API_URL` | `/api`, or remove this variable to use the production default |
 
@@ -366,13 +369,21 @@ Verify the deployed version:
    replace that state with API-backed data.
 6. Follow the install, offline, and update checks in `frontend/README.md`.
 
-## Database deployment status
+## Production database
 
-Persistent database deployment remains pending. Parent linking and reminder
-preferences have database-backed adapters and tracked migrations, but still need
-trusted authentication and reviewed verification providers. Deployment must provision
-PostgreSQL, store its connection string in backend environment settings, generate
-the Prisma client during the build, and apply the tracked migrations using the
-[baseline/upgrade guide](backend/prisma/README.md). The existing `prisma:migrate`
-script uses `migrate dev` and is for local development. Add provider-specific
-provisioning, backup, and restore instructions when that deployment exists.
+Follow the [production PostgreSQL runbook](docs/production-database.md) to provision
+Neon through Vercel, configure server-only secrets, apply tracked migrations, and
+verify connectivity. Neon is now provisioned, all tracked migrations are applied,
+and the live readiness endpoint has been verified successfully. The runbook records
+the resource, deployment, and remaining recovery planning before real data is introduced.
+
+`GET /api/health` remains process liveness. `GET /api/health/ready` runs read-only
+database/schema probes and returns HTTP 200 when available or a generic HTTP 503
+when configuration, connectivity, or required tables/columns are missing. It does
+not return credentials, hostnames, records, or migration details, and responses are
+not cached. `npm run db:check` additionally checks the tracked migration history.
+
+Parent linking and reminder preferences still require trusted authentication and
+reviewed verification providers; database provisioning does not enable these gates.
+Assignment/exam routes continue to use demo data. `prisma:migrate` is local-only
+(`migrate dev`); production uses `prisma:migrate:deploy` (`migrate deploy`).

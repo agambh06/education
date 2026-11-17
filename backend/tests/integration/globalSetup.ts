@@ -32,9 +32,8 @@ export default async function setup(project: TestProject) {
       process.execPath,
       [
         fileURLToPath(new URL("../../node_modules/prisma/build/index.js", import.meta.url)),
-        "db",
-        "push",
-        "--skip-generate",
+        "migrate",
+        "deploy",
         "--schema",
         fileURLToPath(new URL("../../prisma/schema.prisma", import.meta.url)),
       ],

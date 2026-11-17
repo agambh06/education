@@ -1,5 +1,10 @@
 # Prisma migrations
 
+For hosted PostgreSQL provisioning, production-only secrets, connection checks,
+and recovery, follow the [production database runbook](../../docs/production-database.md).
+From the repository root, `npm run prisma:migrate:deploy` and
+`npm run prisma:migrate:status` wrap the production-safe Prisma commands.
+
 This repository previously had a Prisma schema but no tracked migration history.
 `20261112000000_baseline` records that original school schema;
 `20261112000100_verified_parent_links` upgrades it for verified family linking.

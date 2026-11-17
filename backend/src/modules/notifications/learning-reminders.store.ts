@@ -1,13 +1,8 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
+import { database } from "../../config/database.js";
 import { assertVerifiedParentLink, ParentLinkError } from "../parent-links/parent-links.service.js";
 import { isActiveReminderLink } from "./learning-reminders.policy.js";
 import type { LearningReminderPreferenceStore, ReminderParentLink } from "./learning-reminders.types.js";
-
-let prisma: PrismaClient | undefined;
-function database(): PrismaClient {
-  prisma ??= new PrismaClient();
-  return prisma;
-}
 
 const includeReminderContext = {
   parent: { select: { role: true } },

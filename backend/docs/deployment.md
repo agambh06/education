@@ -81,4 +81,4 @@ frontend, and a JSON 404 at `/api/missing` as described in the root guide.
 Current assignment/exam data is an in-memory demo and can reset between instances
 or deployments. Parent-link routes deny access until trusted authentication is
 connected. Database provisioning and migrations follow the separate
-[database deployment guidance](../../README.md#database-deployment-status).
+[production database runbook](../../docs/production-database.md).
