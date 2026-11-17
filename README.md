@@ -11,12 +11,17 @@ a PostgreSQL/Prisma data model are maintained alongside it.
 | --- | --- | --- |
 | Frontend | React, TypeScript, Mantine, Vite | Pages and hooks read demo data from `frontend/src/data/mockData.ts`. Navigation and role selection use React state. |
 | API client | `frontend/src/services/` | A typed request helper and assignment service are prepared, but the screens do not call them yet. |
-| Backend | Express, TypeScript, Zod | Routes delegate to services with in-memory assignment/exam data; notifications return demo data. Changes reset when the server restarts. |
-| Database | PostgreSQL, Prisma | `backend/prisma/schema.prisma` models users, school years/classes, students, assignments, exams/study plans, resources, messages, and notifications. API services do not yet use Prisma. |
+| Backend | Express, TypeScript, Zod | Assignments/exams and notifications use demo data. Parent linking uses Prisma and requires a trusted authentication adapter. |
+| Database | PostgreSQL, Prisma | Models users, optional student school membership, verified parent links and the school/learning domain. Parent linking is persistent; the existing demo services remain in memory. |
 
 The UI role switch is a demo control. Authentication and server-side permissions
 are not implemented. A frontend deployment therefore serves the demo UI, and
 setting an API URL alone does not connect it to the backend.
+
+The [verified parent-linking API](backend/docs/parent-linking.md) persists pending,
+verified and revoked relationships. Its routes deny access until a trusted
+authentication adapter is connected; consent eligibility and guardian proof must
+come from reviewed, trusted verification. Existing demo routes remain separate.
 
 The API exposes `/api/health`, `/api/assignments`, `/api/exams`, and
 `/api/notifications`. Assignment completion, exam publication, preparation, and
@@ -114,22 +119,24 @@ frontend changes; rebuild/redeploy for production `VITE_API_URL` changes.
 ### Optional local database workflow
 
 Create an empty local PostgreSQL database named `education_web`, and set
-`DATABASE_URL` to its connection string. Then run:
+`DATABASE_URL` to its connection string. For an existing database, follow the
+[baseline instructions](backend/prisma/README.md) before applying migrations.
+For a new empty database, run:
 
 ```powershell
 npm run prisma:generate
-npm --prefix backend run prisma:migrate -- --name init
+npm --prefix backend exec -- prisma migrate deploy --schema backend/prisma/schema.prisma
 npm --prefix backend run prisma:studio
 ```
 
-`prisma:generate` generates the client; `prisma:migrate` creates and applies a
-development migration; Studio inspects the database. These commands do not switch
-the existing API services to database storage or populate demo data.
+`prisma:generate` generates the client; `migrate deploy` applies tracked migrations;
+Studio inspects the database. These commands do not switch the existing demo
+services to database storage or populate demo data. The parent-link service uses
+Prisma once a trusted authentication adapter is configured.
 
-There is no seed script or committed migration history. The current `.gitignore`
-also excludes `backend/prisma/migrations/`; generated migrations remain local.
-Versioned migrations and database-backed services are prerequisites for a
-repeatable persistent deployment.
+There is no seed script. The repository includes a versioned baseline and additive
+parent-link migration; synthetic fixtures live in the integration tests.
+The upgrade preserves school records and revokes unverified legacy parent links.
 
 ## Development and verification
 
@@ -235,15 +242,18 @@ the container discards its data.
 
 These tests exercise assignment defaults, student-scoped reads, persisted
 completion, foreign-key enforcement, missing updates, and transaction rollback.
-The HTTP endpoints still use an in-memory service, so database tests are separate
-from endpoint tests. CI runs both suites with disposable PostgreSQL on pull requests.
+Parent-link tests exercise real HTTP/database flows, consent and guardian checks,
+expiry, concurrent redemption, revocation, and the versioned migration. Existing
+assignment/exam endpoints still use in-memory services. CI runs the suites with
+disposable PostgreSQL on pull requests.
 
 ### Current coverage limits
 
-The application has no authenticated server-side identity or authorization
-middleware. Authorization tests are recorded as TODOs until authenticated roles
-and assignment ownership checks exist; passing tests do not imply restricted
-access. Assignment screens still use local mock data, so API loading/error
+The application has no configured authentication provider. Parent-link tests use
+a trusted test session resolver; production linking routes deny all requests
+until that dependency is connected. Demo assignment authorization tests remain
+TODOs until authenticated roles and ownership checks exist; passing tests do not
+imply restricted demo data access. Assignment screens still use local mock data, so API loading/error
 coverage tests pending promises and error propagation in the real API client and
 service rather than an API-backed loading/error screen.
 
@@ -308,10 +318,11 @@ Verify the deployed version:
 
 ## Database deployment status
 
-Persistent database deployment remains pending. Once database-backed services and
-versioned migrations are available, the deployment workflow must provision
+Persistent database deployment remains pending. Parent linking now has a
+database-backed service and tracked migrations, but still needs trusted
+authentication and reviewed verification providers. Deployment must provision
 PostgreSQL, store its connection string in backend environment settings, generate
-the Prisma client during the build, and apply committed migrations with
-`prisma migrate deploy` from `backend/`. The existing `prisma:migrate` script uses
-`migrate dev` and is for local development. Add provider-specific provisioning,
-migration, backup, and restore instructions when that deployment exists.
+the Prisma client during the build, and apply the tracked migrations using the
+[baseline/upgrade guide](backend/prisma/README.md). The existing `prisma:migrate`
+script uses `migrate dev` and is for local development. Add provider-specific
+provisioning, backup, and restore instructions when that deployment exists.
