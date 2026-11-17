@@ -71,7 +71,12 @@ export const parentStrings = {
     materials: "חומרי לימוד",
     studyMaterials: "לחומרי הלימוד",
   },
-  calendar: { eyebrow: "לוח זמנים משפחתי", title: "לוח שנה" },
+  calendar: {
+    eyebrow: "לוח זמנים משפחתי",
+    title: "לוח שנה",
+    monthViewLabel: "לוח שנה חודשי משפחתי",
+    scrollHint: "אפשר לגלול לצדדים כדי לראות את כל ימי השבוע.",
+  },
   messages: {
     eyebrow: "שיחות",
     title: "הודעות",

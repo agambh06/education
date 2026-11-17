@@ -5,7 +5,7 @@ import { PageHeader } from "../../components/ui/PageHeader";
 import { adminStrings } from "./strings";
 export function AdminDashboardPage() {
   return (
-    <Stack>
+    <Stack miw={0}>
       <PageHeader eyebrow={adminStrings.eyebrow} title={adminStrings.title} description={adminStrings.description} />
       <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
         <StatCard
@@ -37,7 +37,7 @@ export function AdminDashboardPage() {
           note={adminStrings.stats.messages.note}
         />
       </SimpleGrid>
-      <Paper withBorder p="lg">
+      <Paper withBorder p={{ base: "md", sm: "lg" }}>
         <Title order={2} fz="h3">
           {adminStrings.activityHeading}
         </Title>

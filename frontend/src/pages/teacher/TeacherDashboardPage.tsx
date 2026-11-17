@@ -19,7 +19,7 @@ interface Props {
 }
 export function TeacherDashboardPage({ classes, onCreate }: Props) {
   return (
-    <Stack>
+    <Stack miw={0}>
       <PageHeader
         eyebrow={teacherStrings.eyebrow}
         title={teacherStrings.title}
@@ -31,7 +31,7 @@ export function TeacherDashboardPage({ classes, onCreate }: Props) {
           </Button>
         }
       />
-      <Paper bg="dark.8" c="white" p="lg" radius="md">
+      <Paper bg="dark.8" c="white" p={{ base: "md", sm: "lg" }} radius="md">
         <Title order={2} fz="h3">
           {teacherStrings.quickActionHeading}
         </Title>
@@ -90,7 +90,7 @@ export function TeacherDashboardPage({ classes, onCreate }: Props) {
           note={teacherStrings.stats.messages.note}
         />
       </SimpleGrid>
-      <Paper withBorder p="lg">
+      <Paper withBorder p={{ base: "md", sm: "lg" }}>
         <Title order={2} fz="h3">
           {teacherStrings.classesHeading}
         </Title>

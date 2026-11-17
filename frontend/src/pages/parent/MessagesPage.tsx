@@ -6,7 +6,7 @@ import { parentStrings } from "./strings";
 export function MessagesPage() {
   const active = messages[0];
   return (
-    <Stack>
+    <Stack miw={0}>
       <PageHeader
         eyebrow={parentStrings.messages.eyebrow}
         title={parentStrings.messages.title}

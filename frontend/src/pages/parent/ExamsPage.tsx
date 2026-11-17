@@ -1,15 +1,15 @@
-import { Badge, Box, Button, Card, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { Badge, Box, Button, Card, Flex, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { IconArrowLeft, IconCalendarEvent, IconClock, IconMapPin, IconTarget } from "@tabler/icons-react";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { exams } from "../../data/mockData";
 import { parentStrings } from "./strings";
 export function ExamsPage() {
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" miw={0}>
       <PageHeader {...parentStrings.exams} />
-      <Card bg="violet.7" c="white" radius="lg" padding="xl">
-        <Group justify="space-between">
-          <Box>
+      <Card bg="violet.7" c="white" radius="lg" p={{ base: "md", sm: "xl" }}>
+        <Group justify="space-between" wrap="nowrap">
+          <Box miw={0}>
             <Badge color="violet.1" c="violet.9">
               {parentStrings.exams.inTwoDays}
             </Badge>
@@ -49,17 +49,20 @@ export function ExamsPage() {
       </Card>
       <Paper withBorder radius="md">
         {exams.map((exam) => (
-          <Group
+          <Flex
             key={exam.id}
+            direction={{ base: "column", xs: "row" }}
+            align={{ base: "stretch", xs: "center" }}
             justify="space-between"
-            p="lg"
+            gap="md"
+            p={{ base: "md", sm: "lg" }}
             style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
           >
-            <Group>
-              <Text fw={800} fz="xl">
+            <Group wrap="nowrap" miw={0}>
+              <Text fw={800} fz="xl" style={{ flexShrink: 0 }}>
                 {exam.dateLabel.split(" ")[0]}
               </Text>
-              <Box>
+              <Box miw={0}>
                 <Text c="dimmed" size="xs">
                   {exam.subject} · {parentStrings.exams.studentName}
                 </Text>
@@ -69,8 +72,10 @@ export function ExamsPage() {
                 </Text>
               </Box>
             </Group>
-            <Button variant="light">{parentStrings.exams.materials}</Button>
-          </Group>
+            <Button variant="light" mih={{ base: 44, sm: 36 }} style={{ flexShrink: 0 }}>
+              {parentStrings.exams.materials}
+            </Button>
+          </Flex>
         ))}
       </Paper>
     </Stack>

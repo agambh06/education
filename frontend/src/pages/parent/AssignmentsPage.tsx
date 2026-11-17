@@ -39,7 +39,7 @@ export function AssignmentsPage({ assignments, students, filter, onFilterChange,
           <Tabs.Tab value={commonStrings.overdue}>{commonStrings.overdue}</Tabs.Tab>
         </Tabs.List>
       </Tabs>
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+      <SimpleGrid cols={{ base: 1, sm: 2, xl: 3 }}>
         {assignments.map((assignment) => (
           <AssignmentCard
             key={assignment.id}
