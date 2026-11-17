@@ -1,4 +1,5 @@
 import { Badge, Box, Button, Card, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { IconArrowLeft, IconCalendarEvent, IconClock, IconMapPin, IconTarget } from "@tabler/icons-react";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { exams } from "../../data/mockData";
 import { parentStrings } from "./strings";
@@ -13,19 +14,37 @@ export function ExamsPage() {
               {parentStrings.exams.inTwoDays}
             </Badge>
             <Title order={2} mt="md">
-              מדעים: מערכת השמש
+              {parentStrings.exams.featuredTitle}
             </Title>
             <Text c="violet.1" mt="xs">
-              נועה · כיתה ו׳1 · המורה רובין
+              {parentStrings.exams.featuredDetails}
             </Text>
-            <Text mt="lg">◷ יום ד׳, 13 במרץ　 ◴ 10:30　 ⌂ חדר 204</Text>
-            <Button color="white" c="violet.8" mt="lg">
+            <Group mt="lg" gap="lg">
+              <Group gap={6}>
+                <IconCalendarEvent size={16} stroke={1.75} aria-hidden="true" />
+                <Text>{parentStrings.exams.featuredDate}</Text>
+              </Group>
+              <Group gap={6}>
+                <IconClock size={16} stroke={1.75} aria-hidden="true" />
+                <Text>{parentStrings.exams.featuredTime}</Text>
+              </Group>
+              <Group gap={6}>
+                <IconMapPin size={16} stroke={1.75} aria-hidden="true" />
+                <Text>{parentStrings.exams.featuredLocation}</Text>
+              </Group>
+            </Group>
+            <Button
+              color="white"
+              c="violet.8"
+              mt="lg"
+              rightSection={<IconArrowLeft size={18} stroke={1.75} aria-hidden="true" />}
+            >
               {parentStrings.exams.studyMaterials}
             </Button>
           </Box>
-          <Text fz={120} opacity={0.2}>
-            ◉
-          </Text>
+          <Box opacity={0.2}>
+            <IconTarget size={120} stroke={1.75} aria-hidden="true" />
+          </Box>
         </Group>
       </Card>
       <Paper withBorder radius="md">
@@ -42,7 +61,7 @@ export function ExamsPage() {
               </Text>
               <Box>
                 <Text c="dimmed" size="xs">
-                  {exam.subject} · נועה כהן
+                  {exam.subject} · {parentStrings.exams.studentName}
                 </Text>
                 <Text fw={700}>{exam.title}</Text>
                 <Text c="dimmed" size="sm">

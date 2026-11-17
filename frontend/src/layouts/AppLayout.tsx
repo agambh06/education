@@ -1,5 +1,6 @@
 import { ActionIcon, AppShell, Button, Group, SegmentedControl } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { IconBell, IconMenu2, IconMoonStars, IconSun, IconX } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { Sidebar } from "../components/navigation/Sidebar";
 import { PwaStatus } from "../components/pwa/PwaStatus";
@@ -35,8 +36,18 @@ export function AppLayout({ children, role, page, darkMode, onRoleChange, onPage
     >
       <AppShell.Header>
         <Group h="100%" justify="space-between" px="md">
-          <ActionIcon hiddenFrom="sm" variant="subtle" onClick={toggle} aria-label={appStrings.openNavigation}>
-            ☰
+          <ActionIcon
+            hiddenFrom="sm"
+            variant="subtle"
+            onClick={toggle}
+            aria-label={opened ? appStrings.closeNavigation : appStrings.openNavigation}
+            aria-expanded={opened}
+          >
+            {opened ? (
+              <IconX size={20} stroke={1.75} aria-hidden="true" />
+            ) : (
+              <IconMenu2 size={20} stroke={1.75} aria-hidden="true" />
+            )}
           </ActionIcon>
           <SegmentedControl value={role} onChange={(value) => onRoleChange(toRole(value))} data={roles} />
           <Group gap="xs">
@@ -45,10 +56,14 @@ export function AppLayout({ children, role, page, darkMode, onRoleChange, onPage
               onClick={onThemeToggle}
               aria-label={darkMode ? appStrings.lightMode : appStrings.darkMode}
             >
-              {darkMode ? "☀" : "◐"}
+              {darkMode ? (
+                <IconSun size={20} stroke={1.75} aria-hidden="true" />
+              ) : (
+                <IconMoonStars size={20} stroke={1.75} aria-hidden="true" />
+              )}
             </ActionIcon>
             <ActionIcon variant="light" aria-label={appStrings.notifications}>
-              ♧
+              <IconBell size={20} stroke={1.75} aria-hidden="true" />
             </ActionIcon>
             <Button variant="subtle" size="compact-sm">
               אגם כהן

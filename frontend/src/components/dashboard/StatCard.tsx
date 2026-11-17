@@ -1,8 +1,9 @@
 import { Group, Paper, Text, ThemeIcon } from "@mantine/core";
+import type { ReactNode } from "react";
 import type { ColorTone } from "../../types/domain";
 
 interface StatCardProps {
-  icon: string;
+  icon: ReactNode;
   tone: ColorTone;
   value: string;
   label: string;
@@ -13,7 +14,7 @@ export function StatCard({ icon, tone, value, label, note }: StatCardProps) {
   return (
     <Paper withBorder p="md" radius="md">
       <Group align="flex-start" wrap="nowrap">
-        <ThemeIcon variant="light" color={colors[tone] ?? "indigo"} size="lg" radius="md">
+        <ThemeIcon variant="light" color={colors[tone] ?? "indigo"} size="lg" radius="md" aria-hidden="true">
           {icon}
         </ThemeIcon>
         <div>
