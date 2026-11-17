@@ -9,29 +9,47 @@ a PostgreSQL/Prisma data model are maintained alongside it.
 
 | Layer | Implementation | Current data flow |
 | --- | --- | --- |
-| Frontend | React, TypeScript, Mantine, Vite | Pages and hooks read demo data from `frontend/src/data/mockData.ts`. Navigation and role selection use React state. |
-| API client | `frontend/src/services/` | A typed request helper and assignment service are prepared, but the screens do not call them yet. |
-| Backend | Express, TypeScript, Zod | Assignments/exams and notifications use demo data. Parent linking uses Prisma and requires a trusted authentication adapter. |
-| Database | PostgreSQL, Prisma | Models users, optional student school membership, verified parent links and the school/learning domain. Parent linking is persistent; the existing demo services remain in memory. |
+| Frontend | React, TypeScript, Mantine, Vite | Assignment/exam screens use demo data. The parent overview uses a protected aggregate contract with an explicit fictional demo. Navigation and role selection use React state. |
+| API client | `frontend/src/services/` | Typed services handle parent progress requests and reminder capability status. Existing assignment screens still use demo state. |
+| Backend | Express, TypeScript, Zod | Assignments/exams and notifications use demo data. Parent linking and reminder preferences use Prisma behind trusted authentication boundaries. |
+| Database | PostgreSQL, Prisma | Models users, optional student school membership, verified parent links, reminder preferences, and the school/learning domain. Existing demo assignment/exam services remain in memory. |
 
-The UI role switch is a demo control. Authentication and server-side permissions
-are not implemented. A frontend deployment therefore serves the demo UI, and
-setting an API URL alone does not connect it to the backend.
+The UI role switch is a demo control. No trusted authentication provider is
+configured, and selecting a role does not authorize parent links, progress, or
+reminder preferences. Setting an API URL alone does not replace demo data with
+protected backend integration.
 
 The [verified parent-linking API](backend/docs/parent-linking.md) persists pending,
 verified and revoked relationships. Its routes deny access until a trusted
 authentication adapter is connected; consent eligibility and guardian proof must
 come from reviewed, trusted verification. Existing demo routes remain separate.
 
-The API exposes `/api/health`, `/api/assignments`, `/api/exams`, and
-`/api/notifications`. Assignment completion, exam publication, preparation, and
-study-task endpoints operate on the backend's in-memory data.
+The API exposes `/api/health`, `/api/assignments`, `/api/exams`,
+`/api/notifications`, `/api/parent-links`, and `/api/parent-reminders`. Assignment
+completion, exam publication, preparation, and study-task endpoints operate on
+the backend's in-memory data.
 
 The PWA caches the built application shell and local static assets after an online
 visit. It offers an update prompt before reloading. API responses, writes,
 external Google Fonts, and offline synchronization are not cached or supported.
 See the [frontend PWA guide](frontend/README.md) for the full behavior and browser
 verification steps.
+
+### Parent learning reminders
+
+Issue #38 adds a staged preference and eligibility foundation. Email, push, and
+in-app delivery remain disabled, and the production preference API denies access
+until trusted authentication is connected. The persisted parent-link lifecycle
+exists; reminder integration with permitted progress and delivery remains gated.
+No scheduler or transport is implemented or selected, and no privacy approval is
+claimed. See the [reminder policy and prerequisites](docs/parent-learning-reminders.md)
+for opt-in defaults, quiet hours, frequency caps, data requirements, and validation
+limits.
+
+The [parent progress overview](docs/parent-progress.md) has a separate aggregate
+API contract. Its backend endpoints and permitted practice aggregates are still
+pending. Until connected, the overview shows an unavailable state and offers an
+explicitly labeled fictional demo without using demo roles as authorization.
 
 ## Project layout
 
@@ -135,7 +153,8 @@ services to database storage or populate demo data. The parent-link service uses
 Prisma once a trusted authentication adapter is configured.
 
 There is no seed script. The repository includes a versioned baseline and additive
-parent-link migration; synthetic fixtures live in the integration tests.
+parent-link and reminder-preference migrations; synthetic fixtures live in the
+integration tests.
 The upgrade preserves school records and revokes unverified legacy parent links.
 
 ## Development and verification
@@ -148,16 +167,20 @@ Run these checks from the repository root after installing dependencies:
 
 | Command | What it checks |
 | --- | --- |
-| `npm run build` | Frontend TypeScript/Vite production build, then backend TypeScript compilation. Outputs `frontend/dist/` and `backend/dist/`. |
+| `npm run build` | Frontend TypeScript/Vite production build, then Prisma client generation and backend TypeScript compilation. Outputs `frontend/dist/` and `backend/dist/`. |
 | `npm --prefix frontend run lint` | Current frontend lint script (Oxlint). |
 | `npm --prefix frontend run format:check` | Biome formatting of frontend source, without writing changes. |
 | `npm --prefix frontend exec -- biome check frontend` | Repository-configured Biome lint/format checks for frontend files; run this for frontend code changes as required by the conventions. |
-| `npm --prefix backend test` | Backend API regression tests using the actual Express routes and in-memory demo services. |
-| `npm test` | Frontend component/service tests and all backend unit/API tests. |
+| `npm --prefix backend test` | Prisma generation, test type checking, backend Node API/reminder regressions, and Vitest unit/API tests. |
+| `npm test` | Frontend component/service, progress, icon, and reminder tests, then all backend unit/API/reminder tests. |
 | `npm run test:integration` | Prisma integration tests against the dedicated local test database; see setup below. |
 | `npm --prefix frontend run test:pwa` | PWA lifecycle regression tests, then generated PWA artifact verification. Requires a successful frontend build first. |
 | `npm run test:deployment` | API HTTP/CORS/environment checks and Vite API URL regression tests. Run after building. |
 | `npm run test:backend-deployment` | Compiled API adapter and real `npm start` smoke tests, including host-supplied port and CORS settings. Requires a backend build. |
+| `npm --prefix backend run test:reminders` | Prisma generation, reminder policy and preference-access tests, and HTTP denial checks. No database or delivery integration is exercised. |
+| `npm --prefix frontend run test:reminders` | Reminder status API request, disabled defaults, cancellation, and HTTP/network failures. |
+| `npm --prefix frontend run test:parent-progress` | Parent progress service, dashboard, and state transitions without a database. |
+| `npm --prefix frontend run test:icons` | Shared icon usage and accessibility regressions. |
 | `npm --prefix frontend run verify:pwa` | Artifact verification alone, against the existing `frontend/dist/` build. |
 
 To build one side independently, use `npm --prefix frontend run build` or
@@ -191,21 +214,35 @@ After installing backend dependencies, run from the repository root:
 npm --prefix backend test
 ```
 
+Backend builds and the default backend test command generate the Prisma client automatically.
+Client generation needs no running database or applied migrations.
+
 The suite covers health responses; assignment listing, student filtering, and
 completion, including persistence across requests and repeated completion; exam
 listing, publication, preparation, and study tasks; payload validation; and
-missing resources.
+missing resources. It also covers parent-link HTTP validation, reminder consent,
+access, and eligibility policy.
 
-The command type-checks the backend tests, runs the existing Node API regressions,
-then runs Vitest unit/API tests. Both runners use controlled test environment
-values and separate processes. No PostgreSQL server or migrations are needed,
-and the API tests do not touch a personal database. This verifies the current
-demo API; Prisma persistence is covered separately below.
+The command generates the Prisma client, type-checks the backend tests, runs the
+Node API and reminder regressions, then runs Vitest unit/API tests. The runners
+use controlled test environment values and separate processes. No PostgreSQL
+server or migrations are needed, and the API tests do not touch a personal
+database. A generated Prisma client is required because the application imports
+the guarded reminder preference adapter. These tests verify the current demo API
+and reminder policy; Prisma persistence is covered separately below.
+
+Run `npm --prefix backend run test:reminders` for the reminder policy, consent,
+access, and HTTP denial checks separately. That command generates the Prisma client
+and executes TypeScript source through the existing test runner. Its preference
+tests use an in-memory test store. The isolated integration suite below exercises
+the actual Prisma reminder adapter; production authentication and reminder
+delivery remain gated. See the
+[reminder validation limits](docs/parent-learning-reminders.md#validation-and-remaining-prerequisites).
 
 ### Frontend and backend test commands
 
 ```powershell
-npm test                                  # Frontend component/service and all backend unit/API tests
+npm test                                  # Frontend and backend unit/API/reminder tests
 npm --prefix frontend run test:watch       # Frontend Vitest watch mode
 npm --prefix backend run test:watch        # Backend Vitest watch mode
 npm --prefix backend run test:typecheck    # Type-check backend source, tests, and test configuration
@@ -214,8 +251,11 @@ npm --prefix backend run test:typecheck    # Type-check backend source, tests, a
 Frontend tests render the real application with controlled browser APIs and
 mock network responses at the API boundary. They cover assignment filtering and
 completion, child selection, role-specific dashboards/navigation, and pending,
-successful, and failed API requests. Additional backend coverage checks request
-validation, missing records, JSON error responses, and environment validation.
+successful, and failed API requests. The default frontend test command also runs
+the standalone parent-progress and icon suites, and reminder service tests for
+status requests, disabled defaults, cancellation, and HTTP/network failures.
+Additional backend coverage checks
+request validation, missing records, JSON error responses, and environment validation.
 
 ### Isolated PostgreSQL integration tests
 
@@ -245,18 +285,24 @@ These tests exercise assignment defaults, student-scoped reads, persisted
 completion, foreign-key enforcement, missing updates, and transaction rollback.
 Parent-link tests exercise real HTTP/database flows, consent and guardian checks,
 expiry, concurrent redemption, revocation, and the versioned migration. Existing
-assignment/exam endpoints still use in-memory services. CI runs the suites with
-disposable PostgreSQL on pull requests.
+assignment/exam endpoints still use in-memory services. The migration suite also
+checks the additive reminder preference storage and disabled sharing defaults.
+Reminder adapter tests verify persisted choices and reload, separate opt-out,
+current account/status/consent/guardian checks, relinking with the same verification
+timestamp and a new request ID, sharing-scope reset, stale consent write denial,
+revocation between read and save, and preference deletion when the link is deleted.
+CI runs the suites with disposable PostgreSQL on pull requests.
 
 ### Current coverage limits
 
 The application has no configured authentication provider. Parent-link tests use
-a trusted test session resolver; production linking routes deny all requests
-until that dependency is connected. Demo assignment authorization tests remain
+a trusted test session resolver; production linking and reminder preference routes
+deny all requests until their trusted session dependencies are connected. Those
+denials are tested. Demo assignment authorization tests remain
 TODOs until authenticated roles and ownership checks exist; passing tests do not
-imply restricted demo data access. Assignment screens still use local mock data, so API loading/error
-coverage tests pending promises and error propagation in the real API client and
-service rather than an API-backed loading/error screen.
+imply restricted demo data access. Assignment screens still use local mock data,
+so API loading/error coverage tests pending promises and error propagation in the
+real API client and service rather than an API-backed loading/error screen.
 
 ## Production on Vercel
 
@@ -322,9 +368,9 @@ Verify the deployed version:
 
 ## Database deployment status
 
-Persistent database deployment remains pending. Parent linking now has a
-database-backed service and tracked migrations, but still needs trusted
-authentication and reviewed verification providers. Deployment must provision
+Persistent database deployment remains pending. Parent linking and reminder
+preferences have database-backed adapters and tracked migrations, but still need
+trusted authentication and reviewed verification providers. Deployment must provision
 PostgreSQL, store its connection string in backend environment settings, generate
 the Prisma client during the build, and apply the tracked migrations using the
 [baseline/upgrade guide](backend/prisma/README.md). The existing `prisma:migrate`

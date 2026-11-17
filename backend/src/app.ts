@@ -3,6 +3,7 @@ import express, { type ErrorRequestHandler } from "express";
 import { env } from "./config/env.js";
 import { assignmentsRouter } from "./modules/assignments/assignments.routes.js";
 import { examsRouter } from "./modules/exams/exams.routes.js";
+import { learningRemindersRouter } from "./modules/notifications/learning-reminders.routes.js";
 import { notificationsRouter } from "./modules/notifications/notifications.routes.js";
 import { createParentLinksRouter, type ParentLinksOptions } from "./modules/parent-links/parent-links.routes.js";
 import { healthRouter } from "./routes/health.routes.js";
@@ -16,6 +17,7 @@ export function createApp(parentLinksOptions?: ParentLinksOptions) {
   app.use("/api/assignments", assignmentsRouter);
   app.use("/api/notifications", notificationsRouter);
   app.use("/api/exams", examsRouter);
+  app.use("/api/parent-reminders", learningRemindersRouter);
   app.use("/api/parent-links", createParentLinksRouter(parentLinksOptions));
   app.use("/api", (_request, response) => {
     response.status(404).json({ message: "API route not found" });

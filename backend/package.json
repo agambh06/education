@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "test": "npm run test:typecheck && npm run test:api && npm run test:unit",
-    "test:api": "tsx --test tests/assignments.test.ts tests/exams.test.ts tests/health.test.ts",
+    "test": "npm run prisma:generate && npm run test:typecheck && npm run test:api && npm run test:unit",
+    "test:api": "tsx --test tests/assignments.test.ts tests/exams.test.ts tests/health.test.ts tests/learning-reminders.test.mjs",
     "test:unit": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
@@ -13,6 +13,7 @@
     "typecheck:test": "npm run test:typecheck",
     "dev": "tsx watch src/server.ts",
     "build": "npm run prisma:generate && tsc",
+    "test:reminders": "npm run prisma:generate && tsx --test tests/learning-reminders.test.mjs",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

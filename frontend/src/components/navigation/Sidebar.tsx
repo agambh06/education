@@ -103,6 +103,9 @@ export function Sidebar({ role, page, onPageChange }: Props) {
         <NavLink
           label={appStrings.settings}
           leftSection={<IconSettings size={18} stroke={1.75} aria-hidden="true" />}
+          disabled={role !== "parent"}
+          active={role === "parent" && page === appStrings.settings}
+          onClick={role === "parent" ? () => onPageChange(appStrings.settings) : undefined}
         />
         <Box mt="md">
           <Avatar color="indigo" radius="xl">
