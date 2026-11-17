@@ -7,19 +7,46 @@ Backend host: Vercel team `agam22`, project `education-8mju`, serving
 `https://education-8mju.vercel.app/api`. The separate `education` Vercel project
 is not the target for this database.
 
-The selected provider is Neon Postgres through Vercel Marketplace. As of
-2026-11-17, the existing project has no database integration or `DATABASE_URL`.
-Provisioning is prepared at Neon's Marketplace terms screen and awaits account
-owner acceptance. No production database, applied production migration, or live
-database connection is claimed by this document. The commands below are the
-remaining operator procedure, not a completion record.
+Neon Postgres is provisioned through Vercel Marketplace and verified in
+production as of 2026-11-17:
+
+| Setting | Verified value |
+| --- | --- |
+| Vercel project | `education-8mju` in team `agam22` |
+| Database resource | `neon-emerald-cable` (`store_bjyLNdVU273sokam`) |
+| Neon project | `curly-feather-94398556` |
+| Database region / plan | AWS `us-east-1` / Free |
+| Runtime configuration | Sensitive `DATABASE_URL`, Production only, pooled endpoint with required TLS |
+| Migration history | All three tracked migrations applied; `migrate status` reports up to date |
+| Connection checks | Direct and pooled Prisma connections, schema, and migration history verified |
+| Production deployment | `dpl_2JfULVRXrB2HYi47M9SiuAZHsPGb`, READY |
+| Deployed source | `1c27c9eabaa66a06c2e0b1159edfa427b9ea9206` from `codex/issue-6-production-postgres` |
+
+The owner accepted the Marketplace/Neon terms and initially connected the
+resource to the separate `education` project. That existing connection is retained
+for Production; its provider variables were restricted from Preview to Production.
+The live `education-8mju` connection was added with Production scope only.
+Neither project's current Preview/Development environment configuration includes
+these database credentials.
+
+The public schema was confirmed empty before `prisma migrate deploy` applied
+`20261112000000_baseline`, `20261112000100_verified_parent_links`, and
+`20261117000000_learning_reminder_preferences`. No seed or personal data was added.
+The compiled `db:check` command passed using both direct and pooled URLs.
+
+The production build generated Prisma Client 6.19.3. Authenticated HTTP checks
+of `https://education-8mju.vercel.app` returned readiness/liveness 200 JSON,
+assignment-list 200 JSON, and unknown-API-route 404 JSON. Readiness returned
+`{"status":"ok"}` with `Cache-Control: no-store`. Existing Deployment Protection
+was preserved. Temporary local connection files were removed after verification;
+credentials are not committed.
 
 Local rehearsal on 2026-11-17 used disposable PostgreSQL 16: all three tracked
 migrations applied successfully, a second deploy had no pending migrations,
 status reported up to date, and the compiled `db:check` command passed. The
 compiled Express entry point returned readiness 200 against that database and
 a generic 503 when configuration was removed, while liveness stayed 200.
-These results verify the release tooling; production verification remains pending.
+These results additionally verify the release tooling independently of production.
 
 ## Provision and scope credentials
 
@@ -115,9 +142,11 @@ verified target and redeploy; preserve the former database until the owner has
 confirmed recovery. Reverting application code does not reverse schema changes.
 Use a reviewed forward migration for corrections, and never reset production.
 
-Record the actual provider resource, region, plan, retention, migration results,
-deployment ID, and readiness result here after provisioning and verification.
-Exclude credentials and personal data from that record.
+The resource, region, plan, migration results, deployment, and readiness result
+are recorded above. Restore retention and a recovery rehearsal still need an
+owner-selected policy before introducing real records; no backup/restore
+exercise is claimed by this infrastructure issue. Exclude credentials and
+personal data from operational records.
 
 Provider connection guidance: [Neon pooled versus direct connections](https://neon.com/docs/guides/prisma#why-two-connection-strings).
 That current guide's installation examples target Prisma 7; this repository stays

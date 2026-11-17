@@ -373,8 +373,9 @@ Verify the deployed version:
 
 Follow the [production PostgreSQL runbook](docs/production-database.md) to provision
 Neon through Vercel, configure server-only secrets, apply tracked migrations, and
-verify connectivity. That runbook records which infrastructure steps remain pending;
-local migration verification alone is not evidence of a provisioned production database.
+verify connectivity. Neon is now provisioned, all tracked migrations are applied,
+and the live readiness endpoint has been verified successfully. The runbook records
+the resource, deployment, and remaining recovery planning before real data is introduced.
 
 `GET /api/health` remains process liveness. `GET /api/health/ready` runs read-only
 database/schema probes and returns HTTP 200 when available or a generic HTTP 503
