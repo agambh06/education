@@ -13,6 +13,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { IconCalendarEvent, IconChecklist, IconClock, IconHistory } from "@tabler/icons-react";
 import { useState } from "react";
 import { StatCard } from "../../components/dashboard/StatCard";
 import { PageHeader } from "../../components/ui/PageHeader";
@@ -124,11 +125,29 @@ function LearningSummary({ progress, demo }: { progress: ParentLearningProgress;
           {strings.activityNote}
         </Text>
         <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
-          <StatCard icon="◷" tone="blue" value={String(activity.sessionCount)} label={strings.sessions} note="" />
-          <StatCard icon="✓" tone="teal" value={String(activity.questionCount)} label={strings.questions} note="" />
-          <StatCard icon="◴" tone="purple" value={String(activity.practiceMinutes)} label={strings.minutes} note="" />
           <StatCard
-            icon="▣"
+            icon={<IconHistory size={20} stroke={1.75} aria-hidden="true" />}
+            tone="blue"
+            value={String(activity.sessionCount)}
+            label={strings.sessions}
+            note=""
+          />
+          <StatCard
+            icon={<IconChecklist size={20} stroke={1.75} aria-hidden="true" />}
+            tone="teal"
+            value={String(activity.questionCount)}
+            label={strings.questions}
+            note=""
+          />
+          <StatCard
+            icon={<IconClock size={20} stroke={1.75} aria-hidden="true" />}
+            tone="purple"
+            value={String(activity.practiceMinutes)}
+            label={strings.minutes}
+            note=""
+          />
+          <StatCard
+            icon={<IconCalendarEvent size={20} stroke={1.75} aria-hidden="true" />}
             tone="orange"
             value={
               activity.lastPracticedAt ? dateFormat.format(new Date(activity.lastPracticedAt)) : strings.noLastPractice

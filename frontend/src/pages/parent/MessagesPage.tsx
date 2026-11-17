@@ -1,4 +1,5 @@
 import { Avatar, Box, Button, Group, Paper, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
+import { IconPlus, IconSend } from "@tabler/icons-react";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { messages } from "../../data/mockData";
 import { parentStrings } from "./strings";
@@ -10,7 +11,11 @@ export function MessagesPage() {
         eyebrow={parentStrings.messages.eyebrow}
         title={parentStrings.messages.title}
         description={parentStrings.messages.description}
-        action={<Button>{parentStrings.messages.newMessage}</Button>}
+        action={
+          <Button leftSection={<IconPlus size={18} stroke={1.75} aria-hidden="true" />}>
+            {parentStrings.messages.newMessage}
+          </Button>
+        }
       />
       <Paper withBorder p="md">
         <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl">
@@ -48,7 +53,7 @@ export function MessagesPage() {
               <Box>
                 <Text fw={700}>{active.teacher}</Text>
                 <Text c="dimmed" size="xs">
-                  מתמטיקה · נועה כהן
+                  {parentStrings.messages.conversationDetails}
                 </Text>
               </Box>
             </Group>
@@ -59,11 +64,13 @@ export function MessagesPage() {
               </Text>
             </Paper>
             <Paper bg="indigo.6" c="white" p="sm" radius="md" maw={400} ms="auto">
-              <Text size="sm">תודה, נדאג לסיים את המשימה הערב.</Text>
+              <Text size="sm">{parentStrings.messages.sampleReply}</Text>
             </Paper>
             <Group mt="auto">
               <TextInput placeholder={parentStrings.messages.compose} style={{ flex: 1 }} />
-              <Button>↑</Button>
+              <Button aria-label={parentStrings.messages.send}>
+                <IconSend size={18} stroke={1.75} aria-hidden="true" />
+              </Button>
             </Group>
           </Stack>
         </SimpleGrid>

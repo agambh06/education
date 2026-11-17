@@ -117,6 +117,12 @@ test("linked-child dashboard renders practice totals, upcoming exams, and topic 
   assert.ok(html.includes("50%"));
   assert.ok(html.includes(parentStrings.dashboard.coverageLimitation));
   assert.match(html, /dir="rtl"/);
+  for (const icon of ["history", "checklist", "clock", "calendar-event"]) {
+    assert.match(
+      html,
+      new RegExp(`<svg(?=[^>]*aria-hidden="true")(?=[^>]*class="[^"]*tabler-icon-${icon}(?: |"))[^>]*>`),
+    );
+  }
 });
 
 test("multiple linked children have an accessible child selector", async () => {
