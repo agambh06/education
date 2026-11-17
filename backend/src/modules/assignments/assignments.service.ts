@@ -18,9 +18,9 @@ const assignments: DemoAssignment[] = [
   },
 ];
 export const assignmentsService = {
-  list: (studentId?: string) => (studentId ? assignments.filter((item) => item.studentId === studentId) : assignments),
-  complete: (id: string) => {
-    const assignment = assignments.find((item) => item.id === id);
+  list: (studentId: string) => assignments.filter((item) => item.studentId === studentId),
+  complete: (id: string, studentId: string) => {
+    const assignment = assignments.find((item) => item.id === id && item.studentId === studentId);
     if (!assignment) return undefined;
     assignment.status = "COMPLETED";
     return assignment;
