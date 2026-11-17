@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { after, before, test } from "node:test";
 
@@ -91,4 +94,81 @@ test("an explicitly configured invalid database URL still fails validation", () 
   });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /DATABASE_URL/);
+});
+
+async function isolatedBackendBuild(generatorFails = false) {
+  const fixture = await mkdtemp(join(tmpdir(), "education-backend-build-"));
+  try {
+    const { scripts } = JSON.parse(await readFile(new URL("../backend/package.json", import.meta.url), "utf8"));
+    await writeFile(join(fixture, "package.json"), JSON.stringify({ name: "isolated-backend-build", private: true, scripts }));
+    const bin = join(fixture, "node_modules", ".bin");
+    await mkdir(bin, { recursive: true });
+    const eventsFile = join(fixture, "build-events.txt");
+    const generatedClient = join(fixture, "generated-client.txt");
+
+    // The fixture starts without a generated client, as with an install that
+    // skips lifecycle hooks. These executables exercise the real npm scripts
+    // without generating files inside the checkout or connecting to a database.
+    const commands = {
+      prisma: `
+const { appendFileSync, writeFileSync } = require("node:fs");
+if (process.argv.slice(2).join(" ") !== "generate") process.exit(2);
+appendFileSync(process.env.BUILD_EVENTS_FILE, "generate\\n");
+if (process.env.FAIL_PRISMA_GENERATION === "1") process.exit(7);
+writeFileSync(process.env.GENERATED_CLIENT_FILE, "generated");
+`,
+      tsc: `
+const { appendFileSync, existsSync } = require("node:fs");
+appendFileSync(process.env.BUILD_EVENTS_FILE, "compile\\n");
+if (!existsSync(process.env.GENERATED_CLIENT_FILE)) {
+  process.stderr.write("Prisma Client must be generated before compilation");
+  process.exit(8);
+}
+`,
+    };
+    for (const [name, source] of Object.entries(commands)) {
+      const executable = join(bin, name);
+      await writeFile(executable, `#!/usr/bin/env node\n${source}`, { mode: 0o755 });
+      if (process.platform === "win32") {
+        await writeFile(`${executable}.cmd`, `@echo off\r\n"${process.execPath}" "${executable}" %*\r\n`);
+      }
+    }
+    const pathKey = Object.keys(process.env).find((key) => key.toLowerCase() === "path") ?? "PATH";
+    const result = spawnSync("npm run build --ignore-scripts", {
+      cwd: fixture,
+      shell: true,
+      encoding: "utf8",
+      timeout: 30_000,
+      env: {
+        ...process.env,
+        [pathKey]: `${bin}${delimiter}${process.env[pathKey] ?? ""}`,
+        npm_config_ignore_scripts: "true",
+        BUILD_EVENTS_FILE: eventsFile,
+        GENERATED_CLIENT_FILE: generatedClient,
+        FAIL_PRISMA_GENERATION: generatorFails ? "1" : "0",
+      },
+    });
+    const events = await readFile(eventsFile, "utf8").catch((error) => {
+      if (error.code === "ENOENT") return "";
+      throw error;
+    });
+    return { ...result, events: events.trim().split("\n").filter(Boolean) };
+  } finally {
+    assert.equal(dirname(fixture), resolve(tmpdir()));
+    await rm(fixture, { recursive: true, force: true });
+  }
+}
+
+test("backend build generates Prisma Client before compilation when install hooks are skipped", async () => {
+  const result = await isolatedBackendBuild();
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.deepEqual(result.events, ["generate", "compile"]);
+});
+
+test("backend build stops before compilation if Prisma Client generation fails", async () => {
+  const result = await isolatedBackendBuild(true);
+  assert.ifError(result.error);
+  assert.notEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.deepEqual(result.events, ["generate"]);
 });
