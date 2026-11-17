@@ -72,6 +72,7 @@ beforeAll(async () => {
   originalSchoolData = await schoolData();
   await applyMigration("20261112000100_verified_parent_links");
   await applyMigration("20261117000000_learning_reminder_preferences");
+  await applyMigration("20261117130000_auth_sessions");
 });
 
 afterAll(async () => {
