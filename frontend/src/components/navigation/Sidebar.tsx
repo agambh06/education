@@ -57,7 +57,7 @@ export function Sidebar({ role, page, onPageChange }: Props) {
     admin: appStrings.areas.admin,
   };
   return (
-    <Stack h="100%" p="md">
+    <Stack h="100%" p="md" style={{ overflowY: "auto" }}>
       <Box>
         <Box component="img" src={familyLearningIcon} alt="סקוּלי" w={42} h={42} mb="xs" />
         <Text fw={800} fz="xl">
@@ -73,6 +73,7 @@ export function Sidebar({ role, page, onPageChange }: Props) {
       <Stack gap={4}>
         {nav[role].map((item) => (
           <NavLink
+            component="button"
             key={item}
             label={item}
             active={page === item}
@@ -82,12 +83,13 @@ export function Sidebar({ role, page, onPageChange }: Props) {
               </ThemeIcon>
             }
             onClick={() => onPageChange(item)}
+            mih={44}
           />
         ))}
       </Stack>
       <Box mt="auto">
         <Divider mb="md" />
-        <NavLink label={appStrings.settings} leftSection="⚙" />
+        <NavLink label={appStrings.settings} leftSection="⚙" mih={44} />
         <Box mt="md">
           <Avatar color="indigo" radius="xl">
             אכ

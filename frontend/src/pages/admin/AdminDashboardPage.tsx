@@ -4,15 +4,15 @@ import { PageHeader } from "../../components/ui/PageHeader";
 import { adminStrings } from "./strings";
 export function AdminDashboardPage() {
   return (
-    <Stack>
+    <Stack miw={0}>
       <PageHeader eyebrow={adminStrings.eyebrow} title={adminStrings.title} description={adminStrings.description} />
-      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
+      <SimpleGrid cols={{ base: 1, xs: 2, lg: 4 }}>
         <StatCard icon="◉" tone="blue" value="486" label="תלמידים פעילים" note="ב-18 כיתות" />
         <StatCard icon="♧" tone="purple" value="42" label="צוות הוראה" note="כל החשבונות פעילים" />
         <StatCard icon="✓" tone="orange" value="27" label="פריטים להגשה השבוע" note="בכל הכיתות" />
         <StatCard icon="✉" tone="teal" value="18" label="הודעות מהורים" note="ממתינות למענה" />
       </SimpleGrid>
-      <Paper withBorder p="lg">
+      <Paper withBorder p={{ base: "md", sm: "lg" }}>
         <Title order={2} fz="h3">
           {adminStrings.activityHeading}
         </Title>

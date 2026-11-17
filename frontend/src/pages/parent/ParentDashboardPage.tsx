@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Card,
+  Flex,
   Group,
   Paper,
   Progress,
@@ -31,14 +32,14 @@ export function ParentDashboardPage({ students, selectedStudentId, assignments, 
   const selected = students.find((student) => student.id === selectedStudentId);
   const toDo = assignments.filter((item) => item.status === commonStrings.toDo).length;
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" miw={0}>
       <PageHeader
         eyebrow={parentStrings.dashboard.eyebrow}
         title={parentStrings.dashboard.title}
         description={parentStrings.dashboard.description}
         action={
           <Select
-            w={220}
+            w={{ base: "100%", xs: 220 }}
             value={selectedStudentId}
             onChange={(value) => onStudentChange(value ?? ALL_STUDENTS_ID)}
             data={[
@@ -56,13 +57,13 @@ export function ParentDashboardPage({ students, selectedStudentId, assignments, 
       <Alert color="orange" title={parentStrings.dashboard.attentionTitle} withCloseButton>
         {parentStrings.dashboard.attentionDescription}
       </Alert>
-      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
+      <SimpleGrid cols={{ base: 1, xs: 2, lg: 4 }}>
         <StatCard icon="✓" tone="orange" value={String(toDo)} label="משימות לביצוע" note="אחת להגשה מחר" />
         <StatCard icon="▣" tone="purple" value="2" label="מבחנים קרובים" note="הבא בעוד יומיים" />
         <StatCard icon="✉" tone="blue" value="2" label="הודעות שלא נקראו" note="מהמורה לוי" />
         <StatCard icon="◷" tone="teal" value="4" label="אירועים קרובים" note="השבוע" />
       </SimpleGrid>
-      <Paper withBorder p="lg" radius="md">
+      <Paper withBorder p={{ base: "md", sm: "lg" }} radius="md">
         <SectionHeader
           title={parentStrings.dashboard.attentionHeading}
           sub={parentStrings.dashboard.attentionSubheading}
@@ -92,7 +93,7 @@ export function ParentDashboardPage({ students, selectedStudentId, assignments, 
         </Stack>
       </Paper>
       <SimpleGrid cols={{ base: 1, md: 2 }}>
-        <Paper withBorder p="lg" radius="md">
+        <Paper withBorder p={{ base: "md", sm: "lg" }} radius="md" miw={0}>
           <SectionHeader
             title={parentStrings.dashboard.upcomingHeading}
             sub={parentStrings.dashboard.upcomingSubheading}
@@ -109,7 +110,7 @@ export function ParentDashboardPage({ students, selectedStudentId, assignments, 
             />
           </Stack>
         </Paper>
-        <Paper withBorder p="lg" radius="md">
+        <Paper withBorder p={{ base: "md", sm: "lg" }} radius="md" miw={0}>
           <SectionHeader
             title={parentStrings.dashboard.progressHeading}
             sub={parentStrings.dashboard.progressSubheading}
@@ -123,34 +124,42 @@ export function ParentDashboardPage({ students, selectedStudentId, assignments, 
           </Button>
         </Paper>
       </SimpleGrid>
-      <Card withBorder radius="md" padding="lg">
-        <Group wrap="nowrap">
-          <Avatar size="lg" color="indigo" radius="md">
-            ✦
-          </Avatar>
-          <Box>
-            <Badge color="blue" variant="light">
-              {parentStrings.dashboard.announcementLabel}
-            </Badge>
-            <Title order={3} mt="xs">
-              {parentStrings.dashboard.announcementTitle}
-            </Title>
-            <Text c="dimmed" size="sm" mt={4}>
-              {parentStrings.dashboard.announcementText}
-            </Text>
-          </Box>
-          <Button variant="subtle" ms="auto">
+      <Card withBorder radius="md" p={{ base: "md", sm: "lg" }}>
+        <Flex direction={{ base: "column", sm: "row" }} align={{ base: "stretch", sm: "center" }} gap="md">
+          <Group wrap="nowrap" align="flex-start" flex={1} miw={0}>
+            <Avatar size="lg" color="indigo" radius="md" style={{ flexShrink: 0 }}>
+              ✦
+            </Avatar>
+            <Box miw={0}>
+              <Badge color="blue" variant="light">
+                {parentStrings.dashboard.announcementLabel}
+              </Badge>
+              <Title order={3} mt="xs">
+                {parentStrings.dashboard.announcementTitle}
+              </Title>
+              <Text c="dimmed" size="sm" mt={4}>
+                {parentStrings.dashboard.announcementText}
+              </Text>
+            </Box>
+          </Group>
+          <Button variant="subtle" mih={{ base: 44, sm: 36 }} style={{ flexShrink: 0 }}>
             {parentStrings.dashboard.announcementAction}
           </Button>
-        </Group>
+        </Flex>
       </Card>
     </Stack>
   );
 }
 function SectionHeader({ title, sub }: { title: string; sub: string }) {
   return (
-    <Group justify="space-between" mb="md">
-      <Box>
+    <Flex
+      direction={{ base: "column", xs: "row" }}
+      justify="space-between"
+      align={{ base: "flex-start", xs: "center" }}
+      gap="xs"
+      mb="md"
+    >
+      <Box miw={0}>
         <Title order={2} fz="h3">
           {title}
         </Title>
@@ -158,10 +167,10 @@ function SectionHeader({ title, sub }: { title: string; sub: string }) {
           {sub}
         </Text>
       </Box>
-      <Button variant="subtle" size="compact-sm">
+      <Button variant="subtle" size="sm" mih={{ base: 44, sm: 36 }} style={{ flexShrink: 0 }}>
         {commonStrings.viewAll}
       </Button>
-    </Group>
+    </Flex>
   );
 }
 function Attention({
@@ -178,8 +187,15 @@ function Attention({
   date: string;
 }) {
   return (
-    <Group justify="space-between" py="sm" style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}>
-      <Box>
+    <Flex
+      direction={{ base: "column", xs: "row" }}
+      justify="space-between"
+      align={{ base: "stretch", xs: "center" }}
+      gap="xs"
+      py="sm"
+      style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}
+    >
+      <Box miw={0}>
         <Badge color={color} variant="light">
           {badge}
         </Badge>
@@ -190,15 +206,21 @@ function Attention({
           {detail}
         </Text>
       </Box>
-      <Stack gap={4} align="flex-end">
+      <Flex
+        direction={{ base: "row", xs: "column" }}
+        justify="space-between"
+        align={{ base: "center", xs: "flex-end" }}
+        gap={4}
+        style={{ flexShrink: 0 }}
+      >
         <Text size="xs" fw={700}>
           {date}
         </Text>
-        <Button variant="subtle" size="compact-sm">
+        <Button variant="subtle" size="sm" mih={{ base: 44, sm: 36 }}>
           {commonStrings.details}
         </Button>
-      </Stack>
-    </Group>
+      </Flex>
+    </Flex>
   );
 }
 function Schedule({
@@ -216,13 +238,13 @@ function Schedule({
 }) {
   return (
     <Group wrap="nowrap">
-      <Text fw={800} c={color} w={36} ta="center">
+      <Text component="div" fw={800} c={color} w={36} ta="center" style={{ flexShrink: 0 }}>
         {date}
         <Text size="xs" c="dimmed">
           {commonStrings.march}
         </Text>
       </Text>
-      <Box style={{ borderInlineStart: `3px solid var(--mantine-color-${color}-5)` }} ps="sm">
+      <Box miw={0} style={{ borderInlineStart: `3px solid var(--mantine-color-${color}-5)` }} ps="sm">
         <Text c="dimmed" size="xs">
           {type}
         </Text>

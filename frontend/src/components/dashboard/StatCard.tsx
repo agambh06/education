@@ -1,4 +1,4 @@
-import { Group, Paper, Text, ThemeIcon } from "@mantine/core";
+import { Box, Group, Paper, Text, ThemeIcon } from "@mantine/core";
 import type { ColorTone } from "../../types/domain";
 
 interface StatCardProps {
@@ -11,12 +11,12 @@ interface StatCardProps {
 const colors: Partial<Record<ColorTone, string>> = { orange: "orange", purple: "violet", blue: "blue", teal: "teal" };
 export function StatCard({ icon, tone, value, label, note }: StatCardProps) {
   return (
-    <Paper withBorder p="md" radius="md">
+    <Paper withBorder p="md" radius="md" h="100%" miw={0}>
       <Group align="flex-start" wrap="nowrap">
-        <ThemeIcon variant="light" color={colors[tone] ?? "indigo"} size="lg" radius="md">
+        <ThemeIcon variant="light" color={colors[tone] ?? "indigo"} size="lg" radius="md" style={{ flexShrink: 0 }}>
           {icon}
         </ThemeIcon>
-        <div>
+        <Box miw={0} style={{ overflowWrap: "anywhere" }}>
           <Text fw={800} size="xl">
             {value}
           </Text>
@@ -26,7 +26,7 @@ export function StatCard({ icon, tone, value, label, note }: StatCardProps) {
           <Text c="dimmed" size="xs">
             {note}
           </Text>
-        </div>
+        </Box>
       </Group>
     </Paper>
   );

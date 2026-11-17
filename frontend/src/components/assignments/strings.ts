@@ -1,4 +1,6 @@
 export const assignmentStrings = {
+  createTitle: "משימה חדשה",
+  close: "סגירה",
   titleLabel: "כותרת המשימה",
   titlePlaceholder: "לדוגמה: דף תרגול שברים",
   subjectLabel: "מקצוע",

@@ -1,14 +1,14 @@
-import { Badge, Box, Button, Card, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { Badge, Box, Button, Card, Flex, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { exams } from "../../data/mockData";
 import { parentStrings } from "./strings";
 export function ExamsPage() {
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" miw={0}>
       <PageHeader {...parentStrings.exams} />
-      <Card bg="violet.7" c="white" radius="lg" padding="xl">
-        <Group justify="space-between">
-          <Box>
+      <Card bg="violet.7" c="white" radius="lg" p={{ base: "md", sm: "xl" }}>
+        <Group justify="space-between" wrap="nowrap">
+          <Box miw={0}>
             <Badge color="violet.1" c="violet.9">
               {parentStrings.exams.inTwoDays}
             </Badge>
@@ -18,29 +18,34 @@ export function ExamsPage() {
             <Text c="violet.1" mt="xs">
               נועה · כיתה ו׳1 · המורה רובין
             </Text>
-            <Text mt="lg">◷ יום ד׳, 13 במרץ　 ◴ 10:30　 ⌂ חדר 204</Text>
-            <Button color="white" c="violet.8" mt="lg">
+            <Text mt="lg" style={{ overflowWrap: "anywhere" }}>
+              ◷ יום ד׳, 13 במרץ　 ◴ 10:30　 ⌂ חדר 204
+            </Text>
+            <Button color="white" c="violet.8" mt="lg" mih={{ base: 44, sm: 36 }} w={{ base: "100%", xs: "auto" }}>
               {parentStrings.exams.studyMaterials}
             </Button>
           </Box>
-          <Text fz={120} opacity={0.2}>
+          <Text fz={120} opacity={0.2} visibleFrom="sm" aria-hidden style={{ flexShrink: 0 }}>
             ◉
           </Text>
         </Group>
       </Card>
       <Paper withBorder radius="md">
         {exams.map((exam) => (
-          <Group
+          <Flex
             key={exam.id}
+            direction={{ base: "column", xs: "row" }}
+            align={{ base: "stretch", xs: "center" }}
             justify="space-between"
-            p="lg"
+            gap="md"
+            p={{ base: "md", sm: "lg" }}
             style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
           >
-            <Group>
-              <Text fw={800} fz="xl">
+            <Group wrap="nowrap" miw={0}>
+              <Text fw={800} fz="xl" style={{ flexShrink: 0 }}>
                 {exam.dateLabel.split(" ")[0]}
               </Text>
-              <Box>
+              <Box miw={0}>
                 <Text c="dimmed" size="xs">
                   {exam.subject} · נועה כהן
                 </Text>
@@ -50,8 +55,10 @@ export function ExamsPage() {
                 </Text>
               </Box>
             </Group>
-            <Button variant="light">{parentStrings.exams.materials}</Button>
-          </Group>
+            <Button variant="light" mih={{ base: 44, sm: 36 }} style={{ flexShrink: 0 }}>
+              {parentStrings.exams.materials}
+            </Button>
+          </Flex>
         ))}
       </Paper>
     </Stack>

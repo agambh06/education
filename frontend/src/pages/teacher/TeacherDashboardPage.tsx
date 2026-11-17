@@ -10,36 +10,40 @@ interface Props {
 }
 export function TeacherDashboardPage({ classes, onCreate }: Props) {
   return (
-    <Stack>
+    <Stack miw={0}>
       <PageHeader
         eyebrow={teacherStrings.eyebrow}
         title={teacherStrings.title}
         description={teacherStrings.description}
-        action={<Button onClick={onCreate}>{teacherStrings.newAssignment}</Button>}
+        action={
+          <Button mih={{ base: 44, sm: 36 }} onClick={onCreate}>
+            {teacherStrings.newAssignment}
+          </Button>
+        }
       />
-      <Paper bg="dark.8" c="white" p="lg" radius="md">
+      <Paper bg="dark.8" c="white" p={{ base: "md", sm: "lg" }} radius="md">
         <Title order={2} fz="h3">
           {teacherStrings.quickActionHeading}
         </Title>
         <SimpleGrid cols={{ base: 1, sm: 3 }} mt="md">
-          <Button variant="light" color="gray" onClick={onCreate}>
+          <Button variant="light" color="gray" mih={{ base: 44, sm: 36 }} onClick={onCreate}>
             {teacherStrings.newAssignment}
           </Button>
-          <Button variant="light" color="gray">
+          <Button variant="light" color="gray" mih={{ base: 44, sm: 36 }}>
             {teacherStrings.newExam}
           </Button>
-          <Button variant="light" color="gray">
+          <Button variant="light" color="gray" mih={{ base: 44, sm: 36 }}>
             {teacherStrings.newAnnouncement}
           </Button>
         </SimpleGrid>
       </Paper>
-      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
+      <SimpleGrid cols={{ base: 1, xs: 2, lg: 4 }}>
         <StatCard icon="▣" tone="blue" value="4" label="כיתות" note="112 תלמידים" />
         <StatCard icon="✓" tone="orange" value="5" label="משימות קרובות" note="2 ממתינות לפרסום" />
         <StatCard icon="◉" tone="purple" value="2" label="מבחנים קרובים" note="החודש" />
         <StatCard icon="✉" tone="teal" value="3" label="הודעות חדשות" note="מאז יום שישי" />
       </SimpleGrid>
-      <Paper withBorder p="lg">
+      <Paper withBorder p={{ base: "md", sm: "lg" }}>
         <Title order={2} fz="h3">
           {teacherStrings.classesHeading}
         </Title>

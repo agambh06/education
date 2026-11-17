@@ -1,4 +1,4 @@
-import { Box, Group, Text, Title } from "@mantine/core";
+import { Box, Flex, Text, Title } from "@mantine/core";
 import type { ReactNode } from "react";
 
 interface PageHeaderProps {
@@ -9,8 +9,14 @@ interface PageHeaderProps {
 }
 export function PageHeader({ eyebrow, title, description, action }: PageHeaderProps) {
   return (
-    <Group justify="space-between" align="center" mb="xl" wrap="wrap">
-      <Box>
+    <Flex
+      direction={{ base: "column", sm: "row" }}
+      justify="space-between"
+      align={{ base: "stretch", sm: "center" }}
+      gap="md"
+      mb="xl"
+    >
+      <Box flex={1} miw={0} style={{ overflowWrap: "anywhere" }}>
         <Text c="dimmed" fw={800} size="xs" tt="uppercase" mb={4}>
           {eyebrow}
         </Text>
@@ -24,6 +30,6 @@ export function PageHeader({ eyebrow, title, description, action }: PageHeaderPr
         )}
       </Box>
       {action}
-    </Group>
+    </Flex>
   );
 }

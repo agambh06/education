@@ -1,6 +1,7 @@
 import { Button, SimpleGrid, Tabs } from "@mantine/core";
 import { AssignmentCard } from "../../components/assignments/AssignmentCard";
 import { PageHeader } from "../../components/ui/PageHeader";
+import { commonStrings } from "../../shared/strings/common";
 import type { Assignment, AssignmentStatus, Student } from "../../types/domain";
 import { parentStrings } from "./strings";
 
@@ -19,17 +20,25 @@ export function AssignmentsPage({ assignments, students, filter, onFilterChange,
         eyebrow={parentStrings.assignments.eyebrow}
         title={parentStrings.assignments.title}
         description={parentStrings.assignments.description}
-        action={<Button>{parentStrings.assignments.download}</Button>}
+        action={<Button mih={{ base: 44, sm: 36 }}>{parentStrings.assignments.download}</Button>}
       />
       <Tabs value={filter} onChange={(value) => onFilterChange((value ?? "הכול") as "הכול" | AssignmentStatus)} mb="lg">
-        <Tabs.List>
-          <Tabs.Tab value="הכול">הכול</Tabs.Tab>
-          <Tabs.Tab value="לביצוע">לביצוע</Tabs.Tab>
-          <Tabs.Tab value="הושלם">הושלם</Tabs.Tab>
-          <Tabs.Tab value="באיחור">באיחור</Tabs.Tab>
+        <Tabs.List grow>
+          <Tabs.Tab value={commonStrings.all} mih={44} px="xs">
+            {commonStrings.all}
+          </Tabs.Tab>
+          <Tabs.Tab value={commonStrings.toDo} mih={44} px="xs">
+            {commonStrings.toDo}
+          </Tabs.Tab>
+          <Tabs.Tab value={commonStrings.completed} mih={44} px="xs">
+            {commonStrings.completed}
+          </Tabs.Tab>
+          <Tabs.Tab value={commonStrings.overdue} mih={44} px="xs">
+            {commonStrings.overdue}
+          </Tabs.Tab>
         </Tabs.List>
       </Tabs>
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+      <SimpleGrid cols={{ base: 1, sm: 2, xl: 3 }}>
         {assignments.map((assignment) => (
           <AssignmentCard
             key={assignment.id}
