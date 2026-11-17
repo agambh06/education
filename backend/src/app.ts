@@ -1,5 +1,5 @@
 import cors from "cors";
-import express from "express";
+import express, { type ErrorRequestHandler } from "express";
 import { env } from "./config/env.js";
 import { assignmentsRouter } from "./modules/assignments/assignments.routes.js";
 import { examsRouter } from "./modules/exams/exams.routes.js";
@@ -19,3 +19,19 @@ app.use("/api/parent-reminders", learningRemindersRouter);
 app.use("/api", (_request, response) => {
   response.status(404).json({ message: "API route not found" });
 });
+
+const handleError: ErrorRequestHandler = (error: unknown, _request, response, _next) => {
+  const status =
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof error.status === "number" &&
+    error.status >= 400 &&
+    error.status < 500
+      ? error.status
+      : 500;
+
+  response.status(status).json({ message: status < 500 ? "Invalid request" : "Internal server error" });
+};
+
+app.use(handleError);
