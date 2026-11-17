@@ -157,6 +157,7 @@ Run these checks from the repository root after installing dependencies:
 | `npm run test:integration` | Prisma integration tests against the dedicated local test database; see setup below. |
 | `npm --prefix frontend run test:pwa` | PWA lifecycle regression tests, then generated PWA artifact verification. Requires a successful frontend build first. |
 | `npm run test:deployment` | API HTTP/CORS/environment checks and Vite API URL regression tests. Run after building. |
+| `npm run test:backend-deployment` | Compiled API adapter and real `npm start` smoke tests, including host-supplied port and CORS settings. Requires a backend build. |
 | `npm --prefix frontend run verify:pwa` | Artifact verification alone, against the existing `frontend/dist/` build. |
 
 To build one side independently, use `npm --prefix frontend run build` or
@@ -258,6 +259,9 @@ coverage tests pending promises and error propagation in the real API client and
 service rather than an API-backed loading/error screen.
 
 ## Production on Vercel
+
+See the [backend deployment runbook](backend/docs/deployment.md) for the current
+deployment, standalone Node host commands, and anonymous health verification.
 
 The production website is https://education-8mju.vercel.app/ and its API base URL
 is https://education-8mju.vercel.app/api. The root `vercel.json` builds both apps,
