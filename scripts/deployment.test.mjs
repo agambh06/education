@@ -33,12 +33,11 @@ test("the deployed entry point serves health JSON with production CORS", async (
   assert.deepEqual(await response.json(), { status: "ok" });
 });
 
-test("a representative frontend API request reaches the existing assignments route", async () => {
+test("an unauthenticated frontend API request is denied by the assignments route", async () => {
   const response = await fetch(`${baseUrl}/api/assignments?studentId=noa`);
-  assert.equal(response.status, 200);
-  const assignments = await response.json();
-  assert(assignments.length > 0);
-  assert(assignments.every((assignment) => assignment.studentId === "noa"));
+  assert.equal(response.status, 401);
+  assert.match(response.headers.get("content-type"), /application\/json/);
+  assert.deepEqual(await response.json(), { message: "Authentication required" });
 });
 
 test("CORS preflight allows JSON writes from the deployed origin", async () => {
