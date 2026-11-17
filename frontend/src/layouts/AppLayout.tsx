@@ -1,7 +1,7 @@
-import { ActionIcon, AppShell, Button, Group, SegmentedControl } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { ActionIcon, AppShell, Box, Button, Drawer, Flex, Group, SegmentedControl, useMantineTheme } from "@mantine/core";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconBell, IconMenu2, IconMoonStars, IconSun, IconX } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { Sidebar } from "../components/navigation/Sidebar";
 import { PwaStatus } from "../components/pwa/PwaStatus";
 import { appStrings } from "../shared/strings/app";
@@ -44,13 +44,23 @@ export function AppLayout({ children, role, page, darkMode, onRoleChange, onPage
       padding={{ base: "sm", sm: "lg", md: "xl" }}
     >
       <AppShell.Header>
-        <Group h="100%" justify="space-between" px="md">
+        <Flex
+          h="100%"
+          align="center"
+          justify="space-between"
+          wrap="wrap"
+          direction={{ base: "row", md: "row-reverse" }}
+          gap={4}
+          px={{ base: "sm", md: "md" }}
+          py={{ base: 4, md: 0 }}
+        >
           <ActionIcon
-            hiddenFrom="sm"
+            hiddenFrom="md"
             variant="subtle"
             onClick={toggle}
             aria-label={opened ? appStrings.closeNavigation : appStrings.openNavigation}
             aria-expanded={opened}
+            size={44}
           >
             {opened ? (
               <IconX size={20} stroke={1.75} aria-hidden="true" />
@@ -58,8 +68,7 @@ export function AppLayout({ children, role, page, darkMode, onRoleChange, onPage
               <IconMenu2 size={20} stroke={1.75} aria-hidden="true" />
             )}
           </ActionIcon>
-          <SegmentedControl value={role} onChange={(value) => onRoleChange(toRole(value))} data={roles} />
-          <Group gap="xs">
+          <Group gap={4} wrap="nowrap">
             <ActionIcon
               variant="light"
               onClick={onThemeToggle}
@@ -72,7 +81,7 @@ export function AppLayout({ children, role, page, darkMode, onRoleChange, onPage
                 <IconMoonStars size={20} stroke={1.75} aria-hidden="true" />
               )}
             </ActionIcon>
-            <ActionIcon variant="light" aria-label={appStrings.notifications}>
+            <ActionIcon size={44} variant="light" aria-label={appStrings.notifications}>
               <IconBell size={20} stroke={1.75} aria-hidden="true" />
             </ActionIcon>
             <Button variant="subtle" size="compact-sm" mih={44} px="xs">

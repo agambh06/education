@@ -1,4 +1,4 @@
-import { Badge, Button, Group, Paper, Progress, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Badge, Box, Button, Flex, Paper, Progress, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { IconHandStop } from "@tabler/icons-react";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { commonStrings } from "../../shared/strings/common";

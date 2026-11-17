@@ -1,4 +1,4 @@
-import { Button, Group, Select, Stack, Textarea, TextInput } from "@mantine/core";
+import { Button, Flex, Select, SimpleGrid, Stack, Textarea, TextInput } from "@mantine/core";
 import { IconPaperclip, IconPlus } from "@tabler/icons-react";
 import { Modal } from "../ui/Modal";
 import { assignmentStrings } from "./strings";
@@ -28,18 +28,18 @@ export function CreateAssignmentModal({ onClose, onPublish }: Props) {
           <Textarea label={forms.descriptionLabel} placeholder={forms.descriptionPlaceholder} minRows={3} />
           <SimpleGrid cols={{ base: 1, xs: 2 }} verticalSpacing="md" style={{ alignItems: "end" }}>
             <TextInput label={forms.dueDateLabel} type="date" required />
-            <Button variant="light" leftSection={<IconPaperclip size={18} stroke={1.75} aria-hidden="true" />}>
+            <Button variant="light" mih={{ base: 44, sm: 36 }} leftSection={<IconPaperclip size={18} stroke={1.75} aria-hidden="true" />}>
               {forms.addFile}
             </Button>
-          </Group>
-          <Group justify="flex-end" mt="md">
-            <Button variant="subtle" onClick={onClose}>
+          </SimpleGrid>
+          <Flex direction={{ base: "column", xs: "row" }} justify="flex-end" gap="sm" mt="md">
+            <Button variant="subtle" mih={{ base: 44, sm: 36 }} onClick={onClose}>
               {forms.saveDraft}
             </Button>
-            <Button type="submit" leftSection={<IconPlus size={18} stroke={1.75} aria-hidden="true" />}>
+            <Button type="submit" mih={{ base: 44, sm: 36 }} leftSection={<IconPlus size={18} stroke={1.75} aria-hidden="true" />}>
               {forms.publish}
             </Button>
-          </Group>
+          </Flex>
         </Stack>
       </form>
     </Modal>

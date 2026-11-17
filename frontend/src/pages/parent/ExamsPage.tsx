@@ -1,4 +1,4 @@
-import { Badge, Box, Button, Card, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { Badge, Box, Button, Card, Flex, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { IconArrowLeft, IconCalendarEvent, IconClock, IconMapPin, IconTarget } from "@tabler/icons-react";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { exams } from "../../data/mockData";

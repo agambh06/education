@@ -1,4 +1,4 @@
-import { Button, Card, Group, Stack, Text, ThemeIcon } from "@mantine/core";
+import { Box, Button, Card, Group, Stack, Text, ThemeIcon } from "@mantine/core";
 import { IconArrowLeft, IconBook2, IconClock, IconUser } from "@tabler/icons-react";
 import { commonStrings } from "../../shared/strings/common";
 import type { Assignment } from "../../types/domain";
@@ -51,11 +51,11 @@ export function AssignmentCard({ assignment, studentName, onComplete }: Assignme
           </Group>
         </Stack>
         {assignment.status === "לביצוע" ? (
-          <Button color="teal" variant="light" onClick={() => onComplete(assignment.id)}>
+          <Button color="teal" variant="light" mih={{ base: 44, sm: 36 }} onClick={() => onComplete(assignment.id)}>
             {commonStrings.markComplete}
           </Button>
         ) : (
-          <Button variant="subtle" rightSection={<IconArrowLeft size={18} stroke={1.75} aria-hidden="true" />}>
+          <Button variant="subtle" mih={{ base: 44, sm: 36 }} rightSection={<IconArrowLeft size={18} stroke={1.75} aria-hidden="true" />}>
             {commonStrings.details}
           </Button>
         )}

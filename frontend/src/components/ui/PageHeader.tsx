@@ -1,4 +1,4 @@
-import { Box, Flex, Text, Title } from "@mantine/core";
+import { Box, Flex, Group, Text, Title } from "@mantine/core";
 import type { ReactNode } from "react";
 
 interface PageHeaderProps {

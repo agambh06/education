@@ -17,6 +17,9 @@ export const appStrings = {
   darkMode: "מצב כהה",
   openNavigation: "פתיחת ניווט",
   closeNavigation: "סגירת ניווט",
+  navigation: "ניווט",
+  chooseRole: "בחירת תפקיד",
+  userName: "אגם כהן",
   notifications: "התראות",
 } as const;
 
