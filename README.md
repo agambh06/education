@@ -52,7 +52,7 @@ agents/skills/           Repository coding conventions
 
 ## Prerequisites
 
-- Node.js 22.12 or newer (required by the locked frontend tools)
+- Node.js 24 (used by the test CI)
 - npm 10 or newer
 - PostgreSQL 16 or newer for the optional local database workflow
 
@@ -146,6 +146,8 @@ Run these checks from the repository root after installing dependencies:
 | `npm --prefix frontend run format:check` | Biome formatting of frontend source, without writing changes. |
 | `npm --prefix frontend exec -- biome check frontend` | Repository-configured Biome lint/format checks for frontend files; run this for frontend code changes as required by the conventions. |
 | `npm --prefix backend test` | Backend API regression tests using the actual Express routes and in-memory demo services. |
+| `npm test` | Frontend component/service tests and all backend unit/API tests. |
+| `npm run test:integration` | Prisma integration tests against the dedicated local test database; see setup below. |
 | `npm --prefix frontend run test:pwa` | PWA lifecycle regression tests, then generated PWA artifact verification. Requires a successful frontend build first. |
 | `npm run test:deployment` | API HTTP/CORS/environment checks and Vite API URL regression tests. Run after building. |
 | `npm --prefix frontend run verify:pwa` | Artifact verification alone, against the existing `frontend/dist/` build. |
@@ -154,8 +156,8 @@ To build one side independently, use `npm --prefix frontend run build` or
 `npm --prefix backend run build`. To apply frontend formatting, use
 `npm --prefix frontend run format` and review the changes.
 
-There is no root `npm test` script, backend lint script, or checked-in CI
-workflow. PWA artifact checks and lifecycle tests do not replace browser testing.
+GitHub Actions runs frontend, backend, and isolated database tests on pull requests.
+There is no backend lint script. PWA artifact checks and lifecycle tests do not replace browser testing.
 Builds do not require a running database; database migration commands do.
 
 For a local PWA smoke test, build first, then preview:
@@ -186,11 +188,64 @@ completion, including persistence across requests and repeated completion; exam
 listing, publication, preparation, and study tasks; payload validation; and
 missing resources.
 
-Tests exercise the actual Express routes and in-memory demo services in fresh
-Node test processes. They force dummy environment values before importing the
-application, so no `.env` file, PostgreSQL server, Prisma migrations, or generated
-Prisma client is needed, and they do not touch a personal database. This verifies
-the current demo API; it does not test Prisma-backed persistence.
+The command type-checks the backend tests, runs the existing Node API regressions,
+then runs Vitest unit/API tests. Both runners use controlled test environment
+values and separate processes. No PostgreSQL server or migrations are needed,
+and the API tests do not touch a personal database. This verifies the current
+demo API; Prisma persistence is covered separately below.
+
+### Frontend and backend test commands
+
+```powershell
+npm test                                  # Frontend component/service and all backend unit/API tests
+npm --prefix frontend run test:watch       # Frontend Vitest watch mode
+npm --prefix backend run test:watch        # Backend Vitest watch mode
+npm --prefix backend run test:typecheck    # Type-check backend source, tests, and test configuration
+```
+
+Frontend tests render the real application with controlled browser APIs and
+mock network responses at the API boundary. They cover assignment filtering and
+completion, child selection, role-specific dashboards/navigation, and pending,
+successful, and failed API requests. Additional backend coverage checks request
+validation, missing records, JSON error responses, and environment validation.
+
+### Isolated PostgreSQL integration tests
+
+Start the disposable database, generate Prisma Client, and run the database tests:
+
+```powershell
+docker compose -f compose.test.yaml up -d --wait
+npm --prefix backend run prisma:generate
+$env:TEST_DATABASE_URL = "postgresql://education_test:education_test@localhost:55432/education_web_test"
+npm run test:integration
+docker compose -f compose.test.yaml down
+```
+
+On macOS/Linux, use `export TEST_DATABASE_URL='postgresql://education_test:education_test@localhost:55432/education_web_test'`
+for the environment-variable step. Docker is optional if you already have a
+dedicated local PostgreSQL database with this exact database name.
+
+The integration runner requires `TEST_DATABASE_URL` explicitly and never falls
+back to `DATABASE_URL` or `.env`. It rejects remote hosts, other database names,
+and connection parameters that could redirect the connection. Each run creates a
+random schema, applies the existing Prisma schema using `prisma db push`, then
+drops only that generated schema during teardown. No migrations or resets run
+against application data. The Docker database uses temporary storage; stopping
+the container discards its data.
+
+These tests exercise assignment defaults, student-scoped reads, persisted
+completion, foreign-key enforcement, missing updates, and transaction rollback.
+The HTTP endpoints still use an in-memory service, so database tests are separate
+from endpoint tests. CI runs both suites with disposable PostgreSQL on pull requests.
+
+### Current coverage limits
+
+The application has no authenticated server-side identity or authorization
+middleware. Authorization tests are recorded as TODOs until authenticated roles
+and assignment ownership checks exist; passing tests do not imply restricted
+access. Assignment screens still use local mock data, so API loading/error
+coverage tests pending promises and error propagation in the real API client and
+service rather than an API-backed loading/error screen.
 
 ## Production on Vercel
 
