@@ -10,6 +10,7 @@ import {
 } from "../src/modules/notifications/learning-reminders.policy.ts";
 import { createLearningRemindersRouter } from "../src/modules/notifications/learning-reminders.routes.ts";
 import { LearningReminderPreferencesService } from "../src/modules/notifications/learning-reminders.service.ts";
+import { PARENT_LINK_CONSENT_VERSION } from "../src/modules/parent-links/parent-links.service.ts";
 
 const DAY = 24 * 60 * 60 * 1_000;
 const NOW = new Date("2026-11-11T10:00:00.000Z");
@@ -22,9 +23,14 @@ function input(overrides = {}) {
     studentId: "child-1",
     now: new Date(NOW),
     link: {
+      id: "link-1",
       parentId: "parent-1",
       studentId: "child-1",
       parentRole: "PARENT",
+      status: "VERIFIED",
+      consentVersion: PARENT_LINK_CONSENT_VERSION,
+      expiresAt: null,
+      accessVerified: true,
       verifiedAt: VERIFIED_AT,
       revokedAt: null,
       examsShared: true,
@@ -34,6 +40,7 @@ function input(overrides = {}) {
       upcomingExams: true,
       lowActivity: true,
       timeZone: "Asia/Jerusalem",
+      linkId: "link-1",
       linkVerifiedAt: VERIFIED_AT,
     },
     exams: [
@@ -87,7 +94,7 @@ function memoryStore() {
       }
       return structuredClone({ link: state.link, preferences: state.preferences });
     },
-    async saveForVerifiedLink(parentId, studentId, verifiedAt, preferences) {
+    async saveForVerifiedLink(parentId, studentId, linkId, verifiedAt, preferences) {
       state.saves += 1;
       if (
         state.rejectSave ||
@@ -95,12 +102,13 @@ function memoryStore() {
         state.link.revokedAt !== null ||
         state.link.parentId !== parentId ||
         state.link.studentId !== studentId ||
+        state.link.id !== linkId ||
         state.link.verifiedAt !== verifiedAt ||
         (preferences.upcomingExams && !state.link.examsShared) ||
         (preferences.lowActivity && (!state.link.examsShared || !state.link.activityShared))
       )
         return false;
-      state.preferences = { ...structuredClone(preferences), linkVerifiedAt: verifiedAt };
+      state.preferences = { ...structuredClone(preferences), linkId, linkVerifiedAt: verifiedAt };
       return true;
     },
   };
@@ -194,6 +202,54 @@ test("missing consent, invalid links, and mismatched permission epochs suppress 
       "admin link",
       (value) => {
         value.link.parentRole = "ADMIN";
+      },
+    ],
+    [
+      "student link",
+      (value) => {
+        value.link.parentRole = "STUDENT";
+      },
+    ],
+    [
+      "pending despite old verification",
+      (value) => {
+        value.link.status = "PENDING";
+      },
+    ],
+    [
+      "revoked status despite old verification",
+      (value) => {
+        value.link.status = "REVOKED";
+      },
+    ],
+    [
+      "missing trusted consent check",
+      (value) => {
+        value.link.accessVerified = false;
+      },
+    ],
+    [
+      "stale consent version",
+      (value) => {
+        value.link.consentVersion = "obsolete-consent";
+      },
+    ],
+    [
+      "expired link",
+      (value) => {
+        value.link.expiresAt = NOW.toISOString();
+      },
+    ],
+    [
+      "invalid link expiry",
+      (value) => {
+        value.link.expiresAt = "invalid";
+      },
+    ],
+    [
+      "new request generation requires fresh opt-in",
+      (value) => {
+        value.link.id = "link-2";
       },
     ],
     [
@@ -482,6 +538,7 @@ test("preference reads and writes require a parent and that parent's active veri
     [null, 401],
     [{ userId: "parent-1", role: "TEACHER" }, 403],
     [{ userId: "parent-1", role: "ADMIN" }, 403],
+    [{ userId: "parent-1", role: "STUDENT" }, 403],
     [{ userId: "other-parent", role: "PARENT" }, 403],
   ]) {
     await assert.rejects(service.getPreferences(session, "child-1"), { status });
@@ -508,6 +565,34 @@ test("reverification and relinking cannot restore consent from an earlier link e
   assert.deepEqual(await service.getPreferences(parentSession, "child-1"), learningReminderDefaults);
   await service.savePreferences(parentSession, "child-1", optedIn);
   assert.deepEqual(await service.getPreferences(parentSession, "child-1"), optedIn);
+  store.state.link.id = "replacement-link";
+  assert.deepEqual(await service.getPreferences(parentSession, "child-1"), learningReminderDefaults);
+  await service.savePreferences(parentSession, "child-1", optedIn);
+  assert.deepEqual(await service.getPreferences(parentSession, "child-1"), optedIn);
+});
+
+test("historical verification never overrides pending or revoked status or missing consent proof", async () => {
+  for (const change of [
+    (link) => {
+      link.status = "PENDING";
+    },
+    (link) => {
+      link.status = "REVOKED";
+    },
+    (link) => {
+      link.accessVerified = false;
+    },
+    (link) => {
+      link.consentVersion = null;
+    },
+  ]) {
+    const store = memoryStore();
+    change(store.state.link);
+    const service = new LearningReminderPreferencesService(store);
+    await assert.rejects(service.getPreferences(parentSession, "child-1"), { status: 403 });
+    await assert.rejects(service.savePreferences(parentSession, "child-1", learningReminderDefaults), { status: 403 });
+    assert.equal(store.state.saves, 0);
+  }
 });
 
 test("future link verification cannot authorize preference reads or writes", async () => {
@@ -562,6 +647,7 @@ test("strict preference validation rejects malformed values and identity fields"
     { ...learningReminderDefaults, timeZone: "-0500" },
     { ...learningReminderDefaults, parentId: "another-parent" },
     { ...learningReminderDefaults, studentId: "another-child" },
+    { ...learningReminderDefaults, linkId: "another-request" },
     { ...learningReminderDefaults, verifiedAt: VERIFIED_AT },
   ]) {
     await assert.rejects(service.savePreferences(parentSession, "child-1", invalid));

@@ -12,7 +12,7 @@
     "test:typecheck": "tsc --project tsconfig.test.json",
     "typecheck:test": "npm run test:typecheck",
     "dev": "tsx watch src/server.ts",
-    "build": "prisma generate && tsc",
+    "build": "npm run prisma:generate && tsc",
     "test:reminders": "npm run prisma:generate && tsx --test tests/learning-reminders.test.mjs",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",

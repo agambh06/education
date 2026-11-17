@@ -24,10 +24,9 @@ function App() {
   const [role, setRole] = useState<Role>("parent");
   const [page, setPage] = useState<AppPage>("סקירה");
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-  const [studentId, setStudentId] = useState(ALL_STUDENTS_ID);
   const [filter, setFilter] = useState<"הכול" | AssignmentStatus>(commonStrings.all);
   const [showCreate, setShowCreate] = useState(false);
-  const { visibleItems, complete } = useAssignments(studentId, filter);
+  const { visibleItems, complete } = useAssignments(ALL_STUDENTS_ID, filter);
   const changeRole = (nextRole: Role) => {
     setRole(nextRole);
     setPage("סקירה");
@@ -38,7 +37,7 @@ function App() {
   };
   const content =
     role === "parent" ? (
-      renderParentPage(page, visibleItems, studentId, setStudentId, filter, setFilter, markComplete)
+      renderParentPage(page, visibleItems, filter, setFilter, markComplete)
     ) : role === "student" ? (
       <StudentDashboardPage assignments={visibleItems} exams={exams} onComplete={markComplete} />
     ) : role === "teacher" ? (
@@ -71,8 +70,6 @@ function App() {
 function renderParentPage(
   page: AppPage,
   assignments: ReturnType<typeof useAssignments>["visibleItems"],
-  studentId: string,
-  setStudentId: (id: string) => void,
   filter: "הכול" | AssignmentStatus,
   setFilter: (filter: "הכול" | AssignmentStatus) => void,
   complete: (id: string) => void,
@@ -91,13 +88,6 @@ function renderParentPage(
   if (page === "לוח שנה") return <CalendarPage />;
   if (page === "הודעות") return <MessagesPage />;
   if (page === appStrings.settings) return <LearningRemindersPage />;
-  return (
-    <ParentDashboardPage
-      students={students}
-      selectedStudentId={studentId}
-      assignments={assignments}
-      onStudentChange={setStudentId}
-    />
-  );
+  return <ParentDashboardPage />;
 }
 export default App;

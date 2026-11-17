@@ -1,3 +1,5 @@
+import type { ParentLinkStatus, UserRole } from "@prisma/client";
+
 export interface LearningReminderPreferenceValues {
   upcomingExams: boolean;
   lowActivity: boolean;
@@ -6,18 +8,25 @@ export interface LearningReminderPreferenceValues {
 
 export interface LearningReminderPreferences extends LearningReminderPreferenceValues {
   // A new verification requires fresh consent, even for the same parent and child.
+  linkId: string;
   linkVerifiedAt: string;
 }
 
 export interface ReminderParentSession {
   userId: string;
-  role: "PARENT" | "TEACHER" | "ADMIN";
+  role: UserRole;
 }
 
 export interface ReminderParentLink {
+  id: string;
   parentId: string;
   studentId: string;
   parentRole: ReminderParentSession["role"];
+  status: ParentLinkStatus;
+  consentVersion: string | null;
+  expiresAt: string | null;
+  // Set only after the shared account, student-consent and guardian access check.
+  accessVerified: boolean;
   verifiedAt: string | null;
   revokedAt: string | null;
   examsShared: boolean;
@@ -35,6 +44,7 @@ export interface LearningReminderPreferenceStore {
   saveForVerifiedLink(
     parentId: string,
     studentId: string,
+    linkId: string,
     verifiedAt: string,
     preferences: LearningReminderPreferenceValues,
   ): Promise<boolean>;

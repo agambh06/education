@@ -1,3 +1,4 @@
+import { PARENT_LINK_CONSENT_VERSION } from "../parent-links/parent-links.service.js";
 import type {
   LearningReminderCandidate,
   LearningReminderInput,
@@ -55,6 +56,11 @@ export function isActiveReminderLink(
     link.parentId === parentId &&
     link.studentId === studentId &&
     link.parentRole === "PARENT" &&
+    link.status === "VERIFIED" &&
+    link.accessVerified === true &&
+    link.consentVersion === PARENT_LINK_CONSENT_VERSION &&
+    (link.expiresAt === null ||
+      (Number.isFinite(Date.parse(link.expiresAt)) && Date.parse(link.expiresAt) > now.getTime())) &&
     link.verifiedAt !== null &&
     Number.isFinite(Date.parse(link.verifiedAt)) &&
     Date.parse(link.verifiedAt) <= now.getTime() &&
@@ -70,6 +76,7 @@ export function evaluateLearningReminder(input: LearningReminderInput): Learning
     !Number.isFinite(nowMs) ||
     !isActiveReminderLink(link, parentId, studentId, now) ||
     !preferences ||
+    preferences.linkId !== link.id ||
     preferences.linkVerifiedAt !== link.verifiedAt ||
     (!preferences.upcomingExams && !preferences.lowActivity) ||
     !isValidReminderTimeZone(preferences.timeZone)

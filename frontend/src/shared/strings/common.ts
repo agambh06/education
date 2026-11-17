@@ -1,7 +1,7 @@
 export const commonStrings = {
   all: "הכול",
   allChildren: "כל הילדים",
-  details: "לפרטים ←",
+  details: "לפרטים",
   today: "היום",
   march: "מרץ",
   viewAll: "לכל הפריטים",

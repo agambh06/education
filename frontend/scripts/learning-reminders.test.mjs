@@ -99,7 +99,11 @@ test("HTTP failures reject instead of returning or parsing success status", asyn
       },
     }));
 
-    await assert.rejects(service.getStatus(), new RegExp(`API request failed: ${status}`));
+    await assert.rejects(
+      service.getStatus(),
+      (error) =>
+        error.name === "ApiError" && error.status === status && error.message === `API request failed: ${status}`,
+    );
     assert.equal(jsonCalls, 0);
   }
 });

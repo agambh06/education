@@ -1,4 +1,5 @@
 import { Button, Group, Select, Stack, Textarea, TextInput } from "@mantine/core";
+import { IconPaperclip, IconPlus } from "@tabler/icons-react";
 import { Modal } from "../ui/Modal";
 import { assignmentStrings } from "./strings";
 
@@ -27,13 +28,17 @@ export function CreateAssignmentModal({ onClose, onPublish }: Props) {
           <Textarea label={forms.descriptionLabel} placeholder={forms.descriptionPlaceholder} minRows={3} />
           <Group grow align="flex-end">
             <TextInput label={forms.dueDateLabel} type="date" required />
-            <Button variant="light">{forms.addFile}</Button>
+            <Button variant="light" leftSection={<IconPaperclip size={18} stroke={1.75} aria-hidden="true" />}>
+              {forms.addFile}
+            </Button>
           </Group>
           <Group justify="flex-end" mt="md">
             <Button variant="subtle" onClick={onClose}>
               {forms.saveDraft}
             </Button>
-            <Button type="submit">{forms.publish}</Button>
+            <Button type="submit" leftSection={<IconPlus size={18} stroke={1.75} aria-hidden="true" />}>
+              {forms.publish}
+            </Button>
           </Group>
         </Stack>
       </form>

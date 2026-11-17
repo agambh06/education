@@ -40,7 +40,9 @@ export class LearningReminderPreferencesService {
     const parent = this.requireParent(session);
     const { link, preferences } = await this.store.read(parent.userId, studentId);
     if (!isActiveReminderLink(link, parent.userId, studentId)) throw new LearningReminderAccessError(403);
-    if (preferences?.linkVerifiedAt !== link.verifiedAt) return { ...learningReminderDefaults };
+    if (preferences?.linkId !== link.id || preferences?.linkVerifiedAt !== link.verifiedAt) {
+      return { ...learningReminderDefaults };
+    }
     return {
       upcomingExams: preferences.upcomingExams && link.examsShared,
       lowActivity: preferences.lowActivity && link.examsShared && link.activityShared,
@@ -63,7 +65,7 @@ export class LearningReminderPreferencesService {
     ) {
       throw new LearningReminderAccessError(403);
     }
-    const saved = await this.store.saveForVerifiedLink(parent.userId, studentId, link.verifiedAt, preferences);
+    const saved = await this.store.saveForVerifiedLink(parent.userId, studentId, link.id, link.verifiedAt, preferences);
     if (!saved) throw new LearningReminderAccessError(403);
     return preferences;
   }

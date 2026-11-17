@@ -1,6 +1,6 @@
 export const studentStrings = {
   eyebrow: "היום שלך",
-  title: "שלום נועה 👋",
+  title: "שלום נועה",
   completionSummary: (completed: number, total: number) =>
     `${completed} מתוך ${total} משימות הושלמו — ממשיכים בקצב שלך.`,
   taskHeading: "מה עושים היום?",

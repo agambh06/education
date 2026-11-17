@@ -2,10 +2,12 @@
 
 Issue #38 introduces a staged foundation for opt-in parent reminders. It defines
 preferences and a testable eligibility policy, while keeping delivery unavailable.
-Authentication, active verified parent-child links, and the permitted topic
-activity aggregates from issue #32 are not yet integrated into this application.
-The existing role switch and student selection are demo controls and do not
-establish identity or access rights.
+The persisted [parent-link lifecycle](../backend/docs/parent-linking.md) now
+exists and supplies the shared access checks. A trusted authentication provider,
+the permitted topic activity aggregates from issue #32, and their reminder
+integration remain gated. The parent progress frontend defines an aggregate
+contract and an explicit fictional demo; it does not supply authorized reminder
+activity. Role and demo child selection do not establish identity or access rights.
 
 ## Availability and channels
 
@@ -27,17 +29,26 @@ Upcoming-exam and low-activity reminders are separate preferences. Both default
 to off for each verified parent-child link. Preferences include a saved IANA time
 zone, defaulting to `Asia/Jerusalem`; eligibility uses that saved time zone.
 
-The Prisma preference model is tied to the link's `verifiedAt` epoch. A preference
-from an earlier verification cannot become effective after reverification.
-Revocation denies preference reads, writes, and policy evaluation. Unlinking
-cascades deletion of the preference. Relinking requires verification and a fresh
-explicit opt-in; it must not restore prior consent.
+The Prisma preference model is tied to both the link request ID and its
+`verifiedAt` epoch. A preference from an earlier request or verification cannot
+become effective after relinking, even if verification timestamps coincide.
+Revocation denies preference reads, writes, and policy evaluation. The unlink
+API retains a revoked audit record; physical deletion of the link cascades
+deletion of its preference. Relinking requires a fresh invitation, request,
+verification, and explicit opt-in; it must not restore prior consent.
 
-The schema and Prisma adapter provide persistent preference storage. The adapter
-rechecks link verification and permissions in a serializable transaction before
-writing. Production requests cannot reach it while the session resolver denies
-access. Database integration remains unverified until trusted identity and the
-verified-link lifecycle are connected.
+The schema, additive reminder migration, and Prisma adapter provide persistent
+preference storage. Reads and writes reuse the parent-link service's current
+account, student assent, consent, and guardian-proof checks in serializable
+transactions, alongside reminder sharing scope and consent-epoch checks.
+Production requests cannot reach the adapter while the session resolver denies
+access. Exam and activity sharing scopes default to false; saving a reminder
+preference cannot grant those scopes or bypass the linking lifecycle.
+
+Apply the tracked migrations using the
+[baseline and upgrade guide](../backend/prisma/README.md). The reminder migration
+adds opt-in storage and disabled sharing scopes; it does not verify an existing
+link, change existing verification evidence, or opt any parent in.
 
 ## Eligibility policy
 
@@ -79,20 +90,29 @@ Run `npm --prefix backend run test:reminders` from the repository root to genera
 the Prisma client and run the reminder tests through the existing TypeScript test
 runner. The full `npm --prefix backend test` command also includes these tests and
 test type checking. No running database or applied migrations are needed.
-Preference tests use an in-memory test store rather than the Prisma adapter.
+Preference service tests use an in-memory test store rather than the Prisma adapter.
 Run `npm --prefix frontend run test:reminders` for status-service request,
 cancellation, and error-handling regressions.
 
 Automated tests cover the policy boundaries and denied access, including opt-out,
-link revocation, data freshness, local hours, duplicate exams, rolling caps,
-priority, and the lack of a trusted session. These tests do not establish that
-database persistence, delivery, scheduling, or end-to-end consent works.
-Database integration tests are deferred until the database-backed identity and
-link lifecycle exist.
+link revocation, consent epochs, data freshness, local hours, duplicate exams,
+rolling caps, priority, and the lack of a trusted session. The isolated
+`npm run test:integration` suite also checks the additive reminder migration and
+its disabled defaults, the persisted parent-link lifecycle, and the actual Prisma
+reminder preference adapter. Adapter tests cover persistence and reload through
+a fresh adapter, separate opt-out, current account/status/consent/guardian checks,
+relinking with a new request ID even when verification timestamps coincide,
+sharing-scope reset, stale consent write denial, revocation between read and save,
+and preference deletion when the link is physically deleted.
+Use the dedicated test-database setup in the repository README; never substitute
+a personal database. These isolated tests verify reminder storage and its access
+checks; they do not establish that real production authentication, delivery,
+scheduling, or the complete user flow works.
 
-Before enabling any channel, complete the trusted server session and verified
-link integration, issue #32's permitted activity aggregates, database integration
-and migrations, durable delivery history with atomic cap enforcement, and privacy
-review of the chosen channel and content. Select and implement a scheduler and
-transport only as part of that production work. Verify revocation and unlinking
-through the full flow before enabling delivery.
+Before enabling any channel, connect and verify the trusted server session and
+existing link lifecycle through the reminder flow, integrate issue #32's
+permitted activity aggregates, and apply the tracked migrations. Implement durable
+delivery history with atomic cap enforcement, and complete privacy review of the
+chosen channel and content. Select and implement a scheduler and transport only
+as part of that production work. Verify authentication, revocation, and relinking
+through the full production flow before enabling delivery.
