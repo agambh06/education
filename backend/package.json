@@ -17,6 +17,9 @@
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:status": "prisma migrate status",
+    "db:check": "node dist/scripts/check-database.js",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
