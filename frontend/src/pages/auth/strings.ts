@@ -1,0 +1,17 @@
+export const authStrings = {
+  title: "ברוכים הבאים לסקולי",
+  subtitle: "התחברו לחשבון כדי להמשיך",
+  email: "כתובת אימייל",
+  password: "סיסמה",
+  firstName: "שם פרטי",
+  lastName: "שם משפחה",
+  login: "התחברות",
+  register: "יצירת חשבון",
+  noAccount: "אין לכם חשבון?",
+  hasAccount: "כבר יש לכם חשבון?",
+  switchToRegister: "הרשמה",
+  switchToLogin: "התחברות",
+  logout: "יציאה",
+  loading: "טוען את החשבון…",
+  genericError: "לא ניתן להתחבר כרגע. נסו שוב.",
+} as const;

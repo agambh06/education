@@ -4,4 +4,3 @@ dist/
 .env.local
 *.log
 coverage/
-backend/prisma/migrations/
