@@ -71,6 +71,7 @@ beforeAll(async () => {
   `;
   originalSchoolData = await schoolData();
   await applyMigration("20261112000100_verified_parent_links");
+  await applyMigration("20261117000000_learning_reminder_preferences");
 });
 
 afterAll(async () => {
@@ -99,6 +100,8 @@ describe("verified parent link migration from the existing school schema", () =>
       verifiedById: null,
       consentVersion: null,
       guardianVerificationId: null,
+      examsShared: false,
+      activityShared: false,
     });
     expect(legacy.revokedAt).toBeInstanceOf(Date);
     expect(await prisma.parentStudent.count({ where: { status: "VERIFIED" } })).toBe(0);
@@ -107,6 +110,7 @@ describe("verified parent link migration from the existing school schema", () =>
       parentLinkConsentRequirement: "UNKNOWN",
     });
     expect(await prisma.user.count({ where: { accountVerifiedAt: { not: null } } })).toBe(0);
+    expect(await prisma.learningReminderPreference.count()).toBe(0);
   });
 
   it("allows an independent student profile while keeping account identity unique and unverified by default", async () => {
@@ -127,5 +131,32 @@ describe("verified parent link migration from the existing school schema", () =>
       prisma.student.create({ data: { firstName: "Duplicate", lastName: "Account", userId: user.id } }),
     ).rejects.toMatchObject({ code: "P2002" });
     expect(await prisma.student.count({ where: { userId: user.id } })).toBe(1);
+  });
+
+  it("adds default-off reminder storage without restoring consent on a new request generation", async () => {
+    const parent = await prisma.user.create({
+      data: { email: "reminder-parent@example.test", firstName: "Reminder", lastName: "Parent", role: "PARENT" },
+    });
+    const student = await prisma.student.create({ data: { firstName: "Reminder", lastName: "Student" } });
+    const link = await prisma.parentStudent.create({ data: { parentId: parent.id, studentId: student.id } });
+    expect(link).toMatchObject({ status: "PENDING", examsShared: false, activityShared: false });
+    const preferences = await prisma.learningReminderPreference.create({
+      data: { parentId: parent.id, studentId: student.id, linkId: link.id, linkVerifiedAt: new Date("2026-11-12") },
+    });
+    expect(preferences).toMatchObject({ upcomingExams: false, lowActivity: false, timeZone: "Asia/Jerusalem" });
+    await prisma.parentStudent.update({ where: { id: link.id }, data: { id: randomUUID() } });
+    expect(
+      await prisma.learningReminderPreference.findUniqueOrThrow({
+        where: { parentId_studentId: { parentId: parent.id, studentId: student.id } },
+      }),
+    ).toMatchObject({ linkId: link.id });
+    await prisma.parentStudent.delete({
+      where: { parentId_studentId: { parentId: parent.id, studentId: student.id } },
+    });
+    expect(
+      await prisma.learningReminderPreference.count({ where: { parentId: parent.id, studentId: student.id } }),
+    ).toBe(0);
+    await prisma.student.delete({ where: { id: student.id } });
+    await prisma.user.delete({ where: { id: parent.id } });
   });
 });

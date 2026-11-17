@@ -7,9 +7,11 @@ import App from "./App";
 import { assignmentStrings } from "./components/assignments/strings";
 import { assignments, students } from "./data/mockData";
 import { adminStrings } from "./pages/admin/strings";
+import { learningReminderStrings } from "./pages/parent/learningReminderStrings";
 import { parentStrings } from "./pages/parent/strings";
 import { studentStrings } from "./pages/student/strings";
 import { teacherStrings } from "./pages/teacher/strings";
+import type { LearningReminderStatus } from "./services/learningRemindersService";
 import { appStrings, navigationStrings } from "./shared/strings/app";
 import { commonStrings } from "./shared/strings/common";
 import type { ParentLearningProgress, ParentLinkedChild } from "./types/parentProgress";
@@ -147,6 +149,47 @@ describe("assignment flows", () => {
 });
 
 describe("role rendering and navigation", () => {
+  it("opens gated parent reminder settings and returns to the verified-link progress flow", async () => {
+    const progressFetch = mockParentProgress([]);
+    const reminderStatus: LearningReminderStatus = {
+      settingsAvailable: false,
+      deliveryEnabled: false,
+      blockedBy: ["AUTHENTICATION", "VERIFIED_LINKS", "PERMITTED_PROGRESS", "PRIVACY_REVIEW"],
+      defaults: { upcomingExams: false, lowActivity: false, timeZone: "Asia/Jerusalem" },
+      policy: { windowStartHour: 9, windowEndHour: 19, childCooldownDays: 7, parentWeeklyLimit: 2 },
+    };
+    const fetchMock = vi.fn<typeof fetch>(async (input, options) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      if (url.endsWith("/parent-reminders/status")) return Response.json(reminderStatus);
+      return progressFetch(input, options);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = renderApp();
+    expect(await screen.findByText(parentStrings.dashboard.unlinkedTitle)).toBeVisible();
+
+    await user.click(screen.getByText(appStrings.settings, { exact: true }));
+    expect(screen.getByRole("heading", { name: learningReminderStrings.header.title })).toBeVisible();
+    expect(await screen.findByText(learningReminderStrings.unavailableTitle)).toBeVisible();
+    for (const name of [
+      `${learningReminderStrings.upcomingExams} ${learningReminderStrings.upcomingExamsDescription}`,
+      `${learningReminderStrings.lowActivity} ${learningReminderStrings.lowActivityDescription}`,
+    ]) {
+      const control = screen.getByRole("switch", { name });
+      expect(control).toBeDisabled();
+      expect(control).not.toBeChecked();
+    }
+    expect(screen.getByText(learningReminderStrings.disabledControls)).toBeVisible();
+    expect(screen.getByText(learningReminderStrings.blockers.PRIVACY_REVIEW)).toBeVisible();
+
+    await user.click(screen.getByText(navigationStrings.overview, { exact: true }));
+    expect(screen.getByRole("heading", { name: parentStrings.dashboard.title })).toBeVisible();
+    expect(await screen.findByText(parentStrings.dashboard.unlinkedTitle)).toBeVisible();
+    expect(screen.queryByRole("heading", { name: learningReminderStrings.header.title })).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    expect(screen.queryByText(parentStrings.dashboard.recordedData)).not.toBeInTheDocument();
+    expect(progressFetch).toHaveBeenCalledTimes(2);
+  });
+
   it("does not display mock children or a child selector without verified parent links", async () => {
     renderApp();
     expect(await screen.findByText(parentStrings.dashboard.unlinkedTitle)).toBeVisible();

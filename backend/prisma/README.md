@@ -3,6 +3,8 @@
 This repository previously had a Prisma schema but no tracked migration history.
 `20261112000000_baseline` records that original school schema;
 `20261112000100_verified_parent_links` upgrades it for verified family linking.
+`20261117000000_learning_reminder_preferences` adds reminder preference storage
+and disabled exam/activity sharing scopes to those links.
 The baseline is required for new databases. Never run it over existing tables.
 
 ## Existing database with the original schema
@@ -34,7 +36,7 @@ npx prisma migrate deploy
 npx prisma generate
 ```
 
-Both migrations execute in order. Tests and migration rehearsals must use an
+All migrations execute in order. Tests and migration rehearsals must use an
 isolated disposable database, never a personal or shared developer database.
 
 ## Linking data after the upgrade
@@ -59,3 +61,17 @@ Invitation records store token hashes only. Audit identifiers (`verifiedById`,
 identifiers rather than foreign keys; do not interpret them as current proof by
 themselves. Current status, consent evidence, scope, expiry, and revocation still
 need validation in the service.
+
+## Reminder preferences after the upgrade
+
+The additive reminder migration preserves existing link status and verification
+evidence. `examsShared` and `activityShared` default to false for every link.
+Both reminder preferences also default to false; the migration creates no opt-ins
+and grants no additional access.
+
+Preference consent is bound to the current link request ID and verification
+timestamp. A new request or verification requires fresh opt-in. The reminder
+adapter reuses the parent-link access checks; a preference never replaces current
+account, consent, or guardian verification. Production reminder access and all
+delivery channels remain disabled pending trusted authentication and the remaining
+[reminder prerequisites](../../docs/parent-learning-reminders.md).

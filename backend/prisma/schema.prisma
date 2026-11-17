@@ -101,11 +101,11 @@ model Student {
 }
 
 model ParentStudent {
-  id                     String           @unique @default(cuid())
+  id                     String                      @unique @default(cuid())
   parentId               String
   studentId              String
-  status                 ParentLinkStatus @default(PENDING)
-  requestedAt            DateTime         @default(now())
+  status                 ParentLinkStatus            @default(PENDING)
+  requestedAt            DateTime                    @default(now())
   expiresAt              DateTime?
   verifiedAt             DateTime?
   verifiedById           String?
@@ -113,11 +113,29 @@ model ParentStudent {
   guardianVerificationId String?
   revokedAt              DateTime?
   revokedById            String?
-  parent                 User             @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  student                Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  examsShared            Boolean                     @default(false)
+  activityShared         Boolean                     @default(false)
+  parent                 User                        @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  student                Student                     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reminderPreferences    LearningReminderPreference?
 
   @@id([parentId, studentId])
   @@index([studentId, status])
+}
+
+model LearningReminderPreference {
+  parentId       String
+  studentId      String
+  // Keep the original request generation when a link is re-requested.
+  linkId         String
+  linkVerifiedAt DateTime
+  upcomingExams  Boolean       @default(false)
+  lowActivity    Boolean       @default(false)
+  timeZone       String        @default("Asia/Jerusalem")
+  updatedAt      DateTime      @updatedAt
+  link           ParentStudent @relation(fields: [parentId, studentId], references: [parentId, studentId], onDelete: Cascade)
+
+  @@id([parentId, studentId])
 }
 
 model ParentLinkInvitation {

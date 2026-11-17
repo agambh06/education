@@ -41,6 +41,54 @@ async function verifiedStudent(tx: Prisma.TransactionClient, userId: string) {
   return user.studentProfile;
 }
 
+async function consentProof(tx: Prisma.TransactionClient, link: ParentStudent, at: Date) {
+  const student = await tx.student.findUnique({ where: { id: link.studentId } });
+  if (student?.parentLinkConsentRequirement === "SELF_CONSENT") return null;
+  if (student?.parentLinkConsentRequirement === "GUARDIAN") {
+    const proof = await tx.parentLinkGuardianVerification.findFirst({
+      where: {
+        parentId: link.parentId,
+        studentId: link.studentId,
+        verifiedAt: { gte: link.requestedAt, lte: at },
+        expiresAt: { gt: at },
+        revokedAt: null,
+        ...(link.status === "VERIFIED" ? { id: link.guardianVerificationId ?? "" } : {}),
+      },
+      orderBy: { verifiedAt: "desc" },
+    });
+    if (proof) return proof.id;
+  }
+  throw new ParentLinkError(403, "Trusted consent eligibility or guardian verification is required");
+}
+
+// Reuse the full access boundary inside protected reads and atomic writes.
+export async function assertVerifiedParentLink(
+  tx: Prisma.TransactionClient,
+  parentId: string,
+  studentId: string,
+  at: Date,
+): Promise<ParentStudent> {
+  const parent = await verifiedUser(tx, parentId);
+  if (parent.role !== "PARENT") throw new ParentLinkError(403, "Student access denied");
+  const link = await tx.parentStudent.findUnique({ where: { parentId_studentId: { parentId, studentId } } });
+  if (
+    link?.status !== "VERIFIED" ||
+    link.revokedAt ||
+    !link.verifiedAt ||
+    !link.verifiedById ||
+    (link.expiresAt && link.expiresAt <= at) ||
+    link.consentVersion !== PARENT_LINK_CONSENT_VERSION
+  )
+    throw new ParentLinkError(403, "Student access denied");
+  const student = await tx.student.findUnique({ where: { id: studentId } });
+  if (!student?.userId || student.userId !== link.verifiedById) {
+    throw new ParentLinkError(403, "Student access denied");
+  }
+  await verifiedStudent(tx, student.userId);
+  await consentProof(tx, link, at);
+  return link;
+}
+
 // Every mutation rechecks its predicates in a serializable transaction. Retrying
 // conflicts also makes concurrent invitation redemption deterministic.
 export function createParentLinksService(prisma: PrismaClient, now: () => Date = () => new Date()) {
@@ -53,26 +101,6 @@ export function createParentLinksService(prisma: PrismaClient, now: () => Date =
         throw error;
       }
     }
-  }
-
-  async function consentProof(tx: Prisma.TransactionClient, link: ParentStudent, at: Date) {
-    const student = await tx.student.findUnique({ where: { id: link.studentId } });
-    if (student?.parentLinkConsentRequirement === "SELF_CONSENT") return null;
-    if (student?.parentLinkConsentRequirement === "GUARDIAN") {
-      const proof = await tx.parentLinkGuardianVerification.findFirst({
-        where: {
-          parentId: link.parentId,
-          studentId: link.studentId,
-          verifiedAt: { gte: link.requestedAt, lte: at },
-          expiresAt: { gt: at },
-          revokedAt: null,
-          ...(link.status === "VERIFIED" ? { id: link.guardianVerificationId ?? "" } : {}),
-        },
-        orderBy: { verifiedAt: "desc" },
-      });
-      if (proof) return proof.id;
-    }
-    throw new ParentLinkError(403, "Trusted consent eligibility or guardian verification is required");
   }
 
   return {
@@ -129,6 +157,8 @@ export function createParentLinksService(prisma: PrismaClient, now: () => Date =
           guardianVerificationId: null,
           revokedAt: null,
           revokedById: null,
+          examsShared: false,
+          activityShared: false,
         };
         const link = await tx.parentStudent.upsert({
           where: { parentId_studentId: pair },
@@ -222,25 +252,7 @@ export function createParentLinksService(prisma: PrismaClient, now: () => Date =
     // in a session/JWT. It grants only the separately defined progress contract.
     async requireAccess(parentId: string, studentId: string) {
       await transaction(async (tx) => {
-        const parent = await verifiedUser(tx, parentId);
-        if (parent.role !== "PARENT") throw new ParentLinkError(403, "Student access denied");
-        const at = now();
-        const link = await tx.parentStudent.findUnique({ where: { parentId_studentId: { parentId, studentId } } });
-        if (
-          link?.status !== "VERIFIED" ||
-          link.revokedAt ||
-          !link.verifiedAt ||
-          !link.verifiedById ||
-          (link.expiresAt && link.expiresAt <= at) ||
-          link.consentVersion !== PARENT_LINK_CONSENT_VERSION
-        )
-          throw new ParentLinkError(403, "Student access denied");
-        const student = await tx.student.findUnique({ where: { id: studentId } });
-        if (!student?.userId || student.userId !== link.verifiedById) {
-          throw new ParentLinkError(403, "Student access denied");
-        }
-        await verifiedStudent(tx, student.userId);
-        await consentProof(tx, link, at);
+        await assertVerifiedParentLink(tx, parentId, studentId, now());
       });
     },
   };
