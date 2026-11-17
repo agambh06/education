@@ -86,8 +86,12 @@ assert(precache.some((entry) => entry.url.endsWith(".js")));
 assert(precache.some((entry) => entry.url.endsWith(".css")));
 assert(!precache.some((entry) => /^\/?api(?:\/|\?|$)/.test(entry.url)));
 
-const vercel = JSON.parse(read("vercel.json"));
-const spaRewrite = new RegExp(`^${vercel.rewrites[0].source}$`);
+const vercel = JSON.parse(readFileSync(new URL("../../vercel.json", import.meta.url), "utf8"));
+const apiRewrite = vercel.rewrites.find((rewrite) => rewrite.destination === "/api");
+assert.equal(apiRewrite?.source, "/api/:path*");
+const spaRewriteRule = vercel.rewrites.find((rewrite) => rewrite.destination === "/index.html");
+assert(spaRewriteRule, "Vercel must configure the SPA navigation fallback");
+const spaRewrite = new RegExp(`^${spaRewriteRule.source}$`);
 for (const path of ["/", "/assignments", "/parents/42", "/apiary"]) {
   assert(spaRewrite.test(path), `Vercel must serve the shell for ${path}`);
   assert(!routes[0].denylist.some((pattern) => pattern.test(path)), path);
