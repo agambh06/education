@@ -71,7 +71,7 @@ export function AppLayout({ children, role, page, darkMode, onRoleChange, onPage
             size="sm"
             w={44}
             h={44}
-            aria-label={appStrings.openNavigation}
+            aria-label={opened ? appStrings.closeNavigation : appStrings.openNavigation}
             aria-expanded={opened}
           />
           <Group gap={4} wrap="nowrap">
