@@ -1,6 +1,6 @@
 import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
-import { Router } from "express";
+import { type Response, Router } from "express";
 import { z } from "zod";
 import { env } from "../../config/env.js";
 import { prisma } from "../../db.js";
@@ -115,7 +115,7 @@ authRouter.post("/logout", async (request, response) => {
   return response.status(204).end();
 });
 
-authRouter.get("/me", requireAuth, async (request: AuthenticatedRequest, response) => {
+authRouter.get("/me", requireAuth(), async (request: AuthenticatedRequest, response: Response) => {
   if (!request.userId) return response.status(401).json({ message: "Authentication required" });
   const user = await prisma.user.findUnique({
     where: { id: request.userId },

@@ -1,4 +1,6 @@
 export const assignmentStrings = {
+  createTitle: "משימה חדשה",
+  close: "סגירה",
   titleLabel: "כותרת המשימה",
   titlePlaceholder: "לדוגמה: דף תרגול שברים",
   subjectLabel: "מקצוע",
@@ -6,7 +8,7 @@ export const assignmentStrings = {
   descriptionLabel: "תיאור",
   descriptionPlaceholder: "הוסיפו הנחיות לתלמידים ולהורים...",
   dueDateLabel: "תאריך הגשה",
-  addFile: "＋ הוספת קובץ",
+  addFile: "הוספת קובץ",
   saveDraft: "שמירה כטיוטה",
   publish: "פרסום המשימה",
   subjects: ["מתמטיקה", "מדעים", "אנגלית"],

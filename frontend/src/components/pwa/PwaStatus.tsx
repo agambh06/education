@@ -67,6 +67,7 @@ export function PwaStatus() {
           <Button
             mt="sm"
             size="sm"
+            mih={{ base: 44, sm: 30 }}
             disabled={!online}
             onClick={() => {
               void updateServiceWorker(true).catch((error: unknown) => {

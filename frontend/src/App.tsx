@@ -13,17 +13,20 @@ import { authStrings } from "./pages/auth/strings";
 import { AssignmentsPage } from "./pages/parent/AssignmentsPage";
 import { CalendarPage } from "./pages/parent/CalendarPage";
 import { ExamsPage } from "./pages/parent/ExamsPage";
+import { LearningRemindersPage } from "./pages/parent/LearningRemindersPage";
 import { MessagesPage } from "./pages/parent/MessagesPage";
 import { ParentDashboardPage } from "./pages/parent/ParentDashboardPage";
 import { StudentDashboardPage } from "./pages/student/StudentDashboardPage";
 import { TeacherDashboardPage } from "./pages/teacher/TeacherDashboardPage";
 import { type AuthUser, authService } from "./services/authService";
+import { appStrings } from "./shared/strings/app";
 import { commonStrings } from "./shared/strings/common";
 import type { AppPage, AssignmentStatus, Role } from "./types/domain";
 
 function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     authService
       .current()
@@ -32,7 +35,7 @@ function App() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading)
+  if (loading) {
     return (
       <Center h="100vh">
         <Text>
@@ -41,6 +44,7 @@ function App() {
         </Text>
       </Center>
     );
+  }
   if (!user) return <AuthPage onAuthenticated={setUser} />;
   return <AuthenticatedApp user={user} onLogout={() => setUser(null)} />;
 }
@@ -49,17 +53,16 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
   const role: Role = user.role.toLowerCase() as Role;
   const [page, setPage] = useState<AppPage>("סקירה");
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-  const [studentId, setStudentId] = useState(ALL_STUDENTS_ID);
   const [filter, setFilter] = useState<"הכול" | AssignmentStatus>(commonStrings.all);
   const [showCreate, setShowCreate] = useState(false);
-  const { visibleItems, complete } = useAssignments(studentId, filter);
+  const { visibleItems, complete } = useAssignments(ALL_STUDENTS_ID, filter);
   const markComplete = (id: string) => {
     complete(id);
     notifications.show({ message: assignmentStrings.completedNotification, color: "teal" });
   };
   const content =
     role === "parent" ? (
-      renderParentPage(page, visibleItems, studentId, setStudentId, filter, setFilter, markComplete)
+      renderParentPage(page, visibleItems, filter, setFilter, markComplete)
     ) : role === "student" ? (
       <StudentDashboardPage assignments={visibleItems} exams={exams} onComplete={markComplete} />
     ) : role === "teacher" ? (
@@ -67,6 +70,7 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
     ) : (
       <AdminDashboardPage />
     );
+
   return (
     <AppLayout
       role={role}
@@ -93,11 +97,10 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
     </AppLayout>
   );
 }
+
 function renderParentPage(
   page: AppPage,
   assignments: ReturnType<typeof useAssignments>["visibleItems"],
-  studentId: string,
-  setStudentId: (id: string) => void,
   filter: "הכול" | AssignmentStatus,
   setFilter: (filter: "הכול" | AssignmentStatus) => void,
   complete: (id: string) => void,
@@ -115,13 +118,8 @@ function renderParentPage(
   if (page === "מבחנים") return <ExamsPage />;
   if (page === "לוח שנה") return <CalendarPage />;
   if (page === "הודעות") return <MessagesPage />;
-  return (
-    <ParentDashboardPage
-      students={students}
-      selectedStudentId={studentId}
-      assignments={assignments}
-      onStudentChange={setStudentId}
-    />
-  );
+  if (page === appStrings.settings) return <LearningRemindersPage />;
+  return <ParentDashboardPage />;
 }
+
 export default App;

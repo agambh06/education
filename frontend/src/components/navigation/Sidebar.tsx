@@ -1,4 +1,17 @@
 import { Avatar, Box, Divider, NavLink, Stack, Text, ThemeIcon } from "@mantine/core";
+import {
+  IconCalendarEvent,
+  IconChecklist,
+  IconHome,
+  IconMail,
+  IconSchool,
+  IconSettings,
+  IconSpeakerphone,
+  IconUser,
+  IconUsers,
+  IconWriting,
+} from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import familyLearningIcon from "../../assets/family-learning-icon.svg";
 import type { AuthUser } from "../../services/authService";
 import { appStrings, navigationStrings } from "../../shared/strings/app";
@@ -39,17 +52,17 @@ const nav: Record<Role, AppPage[]> = {
     appStrings.settings,
   ],
 };
-const icons: Record<AppPage, string> = {
-  סקירה: "⌂",
-  משימות: "✓",
-  מבחנים: "▣",
-  "לוח שנה": "□",
-  הודעות: "✉",
-  "הכיתות שלי": "♧",
-  תלמידים: "♧",
-  צוות: "♙",
-  עדכונים: "◈",
-  הגדרות: "⚙",
+const icons: Record<AppPage, ReactNode> = {
+  סקירה: <IconHome size={18} stroke={1.75} aria-hidden="true" />,
+  משימות: <IconChecklist size={18} stroke={1.75} aria-hidden="true" />,
+  מבחנים: <IconWriting size={18} stroke={1.75} aria-hidden="true" />,
+  "לוח שנה": <IconCalendarEvent size={18} stroke={1.75} aria-hidden="true" />,
+  הודעות: <IconMail size={18} stroke={1.75} aria-hidden="true" />,
+  "הכיתות שלי": <IconSchool size={18} stroke={1.75} aria-hidden="true" />,
+  תלמידים: <IconUser size={18} stroke={1.75} aria-hidden="true" />,
+  צוות: <IconUsers size={18} stroke={1.75} aria-hidden="true" />,
+  עדכונים: <IconSpeakerphone size={18} stroke={1.75} aria-hidden="true" />,
+  הגדרות: <IconSettings size={18} stroke={1.75} aria-hidden="true" />,
 };
 export function Sidebar({ role, user, page, onPageChange }: Props) {
   const label: Record<Role, string> = {
@@ -59,7 +72,7 @@ export function Sidebar({ role, user, page, onPageChange }: Props) {
     admin: appStrings.areas.admin,
   };
   return (
-    <Stack h="100%" p="md">
+    <Stack h="100%" p="md" style={{ overflowY: "auto" }}>
       <Box>
         <Box component="img" src={familyLearningIcon} alt="סקוּלי" w={42} h={42} mb="xs" />
         <Text fw={800} fz="xl">
@@ -75,6 +88,7 @@ export function Sidebar({ role, user, page, onPageChange }: Props) {
       <Stack gap={4}>
         {nav[role].map((item) => (
           <NavLink
+            component="button"
             key={item}
             label={item}
             active={page === item}
@@ -84,12 +98,19 @@ export function Sidebar({ role, user, page, onPageChange }: Props) {
               </ThemeIcon>
             }
             onClick={() => onPageChange(item)}
+            mih={44}
           />
         ))}
       </Stack>
       <Box mt="auto">
         <Divider mb="md" />
-        <NavLink label={appStrings.settings} leftSection="⚙" />
+        <NavLink
+          label={appStrings.settings}
+          leftSection={<IconSettings size={18} stroke={1.75} aria-hidden="true" />}
+          disabled={role !== "parent"}
+          active={role === "parent" && page === appStrings.settings}
+          onClick={role === "parent" ? () => onPageChange(appStrings.settings) : undefined}
+        />
         <Box mt="md">
           <Avatar color="indigo" radius="xl">
             {user.firstName.slice(0, 1)}
