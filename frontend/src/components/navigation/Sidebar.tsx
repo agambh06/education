@@ -1,4 +1,17 @@
 import { Avatar, Box, Divider, NavLink, Stack, Text, ThemeIcon } from "@mantine/core";
+import {
+  IconCalendarEvent,
+  IconChecklist,
+  IconHome,
+  IconMail,
+  IconSchool,
+  IconSettings,
+  IconSpeakerphone,
+  IconUser,
+  IconUsers,
+  IconWriting,
+} from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import familyLearningIcon from "../../assets/family-learning-icon.svg";
 import { appStrings, navigationStrings } from "../../shared/strings/app";
 import type { AppPage, Role } from "../../types/domain";
@@ -37,17 +50,17 @@ const nav: Record<Role, AppPage[]> = {
     appStrings.settings,
   ],
 };
-const icons: Record<AppPage, string> = {
-  סקירה: "⌂",
-  משימות: "✓",
-  מבחנים: "▣",
-  "לוח שנה": "□",
-  הודעות: "✉",
-  "הכיתות שלי": "♧",
-  תלמידים: "♧",
-  צוות: "♙",
-  עדכונים: "◈",
-  הגדרות: "⚙",
+const icons: Record<AppPage, ReactNode> = {
+  סקירה: <IconHome size={18} stroke={1.75} aria-hidden="true" />,
+  משימות: <IconChecklist size={18} stroke={1.75} aria-hidden="true" />,
+  מבחנים: <IconWriting size={18} stroke={1.75} aria-hidden="true" />,
+  "לוח שנה": <IconCalendarEvent size={18} stroke={1.75} aria-hidden="true" />,
+  הודעות: <IconMail size={18} stroke={1.75} aria-hidden="true" />,
+  "הכיתות שלי": <IconSchool size={18} stroke={1.75} aria-hidden="true" />,
+  תלמידים: <IconUser size={18} stroke={1.75} aria-hidden="true" />,
+  צוות: <IconUsers size={18} stroke={1.75} aria-hidden="true" />,
+  עדכונים: <IconSpeakerphone size={18} stroke={1.75} aria-hidden="true" />,
+  הגדרות: <IconSettings size={18} stroke={1.75} aria-hidden="true" />,
 };
 export function Sidebar({ role, page, onPageChange }: Props) {
   const label: Record<Role, string> = {
@@ -87,7 +100,13 @@ export function Sidebar({ role, page, onPageChange }: Props) {
       </Stack>
       <Box mt="auto">
         <Divider mb="md" />
-        <NavLink label={appStrings.settings} leftSection="⚙" />
+        <NavLink
+          label={appStrings.settings}
+          leftSection={<IconSettings size={18} stroke={1.75} aria-hidden="true" />}
+          disabled={role !== "parent"}
+          active={role === "parent" && page === appStrings.settings}
+          onClick={role === "parent" ? () => onPageChange(appStrings.settings) : undefined}
+        />
         <Box mt="md">
           <Avatar color="indigo" radius="xl">
             אכ

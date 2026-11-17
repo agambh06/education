@@ -3,9 +3,13 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
+    "test": "npm --prefix frontend test && npm --prefix backend test",
+    "test:integration": "npm --prefix backend run test:integration",
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "npm --prefix backend run dev",
     "build": "npm --prefix frontend run build && npm --prefix backend run build",
+    "test:backend-deployment": "node --test scripts/deployment.test.mjs scripts/backend-start.test.mjs",
+    "test:deployment": "npm run test:backend-deployment && npm --prefix frontend run test:api-config",
     "prisma:generate": "npm --prefix backend run prisma:generate",
     "prisma:migrate": "npm --prefix backend run prisma:migrate"
   }
