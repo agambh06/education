@@ -10,6 +10,8 @@ This repository previously had a Prisma schema but no tracked migration history.
 `20261112000100_verified_parent_links` upgrades it for verified family linking.
 `20261117000000_learning_reminder_preferences` adds reminder preference storage
 and disabled exam/activity sharing scopes to those links.
+`20261117130000_auth_sessions` adds password hashes and server-side sessions for
+account authentication. Apply it before deploying code that enables registration.
 The baseline is required for new databases. Never run it over existing tables.
 
 ## Existing database with the original schema

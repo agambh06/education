@@ -17,7 +17,7 @@ production as of 2026-11-17:
 | Neon project | `curly-feather-94398556` |
 | Database region / plan | AWS `us-east-1` / Free |
 | Runtime configuration | Sensitive `DATABASE_URL`, Production only, pooled endpoint with required TLS |
-| Migration history | All three tracked migrations applied; `migrate status` reports up to date |
+| Migration history | Three migrations applied in the 2026-11-17 verification; the later auth migration still needs production verification |
 | Connection checks | Direct and pooled Prisma connections, schema, and migration history verified |
 | Production deployment | `dpl_2JfULVRXrB2HYi47M9SiuAZHsPGb`, READY |
 | Deployed source | `1c27c9eabaa66a06c2e0b1159edfa427b9ea9206` from `codex/issue-6-production-postgres` |
@@ -34,6 +34,13 @@ The public schema was confirmed empty before `prisma migrate deploy` applied
 `20261117000000_learning_reminder_preferences`. No seed or personal data was added.
 The compiled `db:check` command passed using both direct and pooled URLs.
 
+The account-auth migration `20261117130000_auth_sessions` was added after that
+recorded production verification. The earlier migration check does not establish
+that `passwordHash` or the `Session` table exists in production. Verify migration
+status and apply pending migrations before relying on account registration. The
+database readiness check now verifies these auth columns and reports unavailable
+until they are present.
+
 The production build generated Prisma Client 6.19.3. Authenticated HTTP checks
 of `https://education-8mju.vercel.app` returned readiness/liveness 200 JSON,
 assignment-list 200 JSON, and unknown-API-route 404 JSON. Readiness returned
@@ -41,9 +48,10 @@ assignment-list 200 JSON, and unknown-API-route 404 JSON. Readiness returned
 was preserved. Temporary local connection files were removed after verification;
 credentials are not committed.
 
-Local rehearsal on 2026-11-17 used disposable PostgreSQL 16: all three tracked
-migrations applied successfully, a second deploy had no pending migrations,
-status reported up to date, and the compiled `db:check` command passed. The
+Local rehearsal on 2026-11-17 used disposable PostgreSQL 16: the three migrations
+recorded at the time applied successfully, a second deploy had no pending migrations,
+status reported up to date, and the compiled `db:check` command passed. The isolated
+integration suite also applies and checks the current tracked migrations. The
 compiled Express entry point returned readiness 200 against that database and
 a generic 503 when configuration was removed, while liveness stayed 200.
 These results additionally verify the release tooling independently of production.
@@ -95,6 +103,7 @@ Expected migration history, in order:
 1. `20261112000000_baseline`
 2. `20261112000100_verified_parent_links`
 3. `20261117000000_learning_reminder_preferences`
+4. `20261117130000_auth_sessions`
 
 The deploy must exit successfully; status must report up to date; `db:check`
 must report verified connectivity, schema, and migrations. It exits nonzero with
@@ -117,7 +126,8 @@ enabled. Check:
 
 - `/api/health` → HTTP 200 JSON `{"status":"ok"}` (process liveness).
 - `/api/health/ready` → HTTP 200 JSON `{"status":"ok"}` (real Prisma connection
-  and required schema columns); missing/unreachable DB → generic HTTP 503.
+  and required schema columns, including `User.passwordHash` and `Session`);
+  missing/unreachable DB or unapplied auth migration → generic HTTP 503.
 - `/api/assignments?studentId=noa` still returns the existing demo array.
 
 Readiness probes run `SELECT 1` and zero-row schema queries, without loading

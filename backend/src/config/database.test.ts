@@ -1,9 +1,19 @@
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import { database } from "./database.js";
+import { checkDatabase, database } from "./database.js";
 
 describe("database configuration and verification failures", () => {
+  it("checks the authentication schema needed by account registration", async () => {
+    const queryRaw = vi.fn().mockResolvedValue([]);
+
+    await checkDatabase({ $queryRaw: queryRaw } as never);
+
+    const statements = queryRaw.mock.calls.map(([query]) => query.join(" "));
+    expect(statements).toContain('SELECT "id", "passwordHash" FROM "User" WHERE false');
+    expect(statements).toContain('SELECT "id", "tokenHash", "userId", "expiresAt" FROM "Session" WHERE false');
+  });
+
   it("requires explicit database configuration without silently falling back", () => {
     vi.stubEnv("DATABASE_URL", "");
     try {
