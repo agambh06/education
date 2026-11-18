@@ -1,10 +1,13 @@
 import { Router, type Response } from "express";
 import { z } from "zod";
 import { getPrincipal } from "../../auth/authorization.js";
+import { requireAuth, resolveAuthenticatedUser } from "../auth/auth.middleware.js";
 import { prisma } from "../../db.js";
 import { createSchoolStructureService } from "./school-structure.service.js";
 
-export const schoolStructureRouter = Router();
+export function createSchoolStructureRouter(resolveUser = resolveAuthenticatedUser) {
+  const schoolStructureRouter = Router();
+  const authenticate = requireAuth(resolveUser);
 
 const classFilterSchema = z.object({
   classId: z.string().trim().min(1).max(100).optional(),
@@ -24,7 +27,7 @@ function parseFilters<T extends z.ZodType>(query: unknown, response: Response, s
   return parsed.data;
 }
 
-schoolStructureRouter.get("/students", async (request, response, next) => {
+schoolStructureRouter.get("/students", authenticate, async (request, response, next) => {
   const filters = parseFilters(request.query, response, classFilterSchema);
   if (!filters) return;
   const principal = getPrincipal(response);
@@ -37,7 +40,7 @@ schoolStructureRouter.get("/students", async (request, response, next) => {
   }
 });
 
-schoolStructureRouter.get("/classes", async (request, response, next) => {
+schoolStructureRouter.get("/classes", authenticate, async (request, response, next) => {
   const filters = parseFilters(request.query, response, schoolYearFilterSchema);
   if (!filters) return;
   const principal = getPrincipal(response);
@@ -50,7 +53,7 @@ schoolStructureRouter.get("/classes", async (request, response, next) => {
   }
 });
 
-schoolStructureRouter.get("/subjects", async (request, response, next) => {
+schoolStructureRouter.get("/subjects", authenticate, async (request, response, next) => {
   const filters = parseFilters(request.query, response, classFilterSchema);
   if (!filters) return;
   const principal = getPrincipal(response);
@@ -62,3 +65,6 @@ schoolStructureRouter.get("/subjects", async (request, response, next) => {
     next(error);
   }
 });
+
+  return schoolStructureRouter;
+}
