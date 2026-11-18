@@ -17,16 +17,7 @@ interface Props {
   onRetry: () => void;
 }
 
-export function AssignmentsPage({
-  assignments,
-  filter,
-  onFilterChange,
-  onComplete,
-  loading,
-  error,
-  onRetry,
-}: Props) {
-
+export function AssignmentsPage({ assignments, filter, onFilterChange, onComplete, loading, error, onRetry }: Props) {
   return (
     <>
       <PageHeader

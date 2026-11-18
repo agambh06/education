@@ -96,9 +96,7 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
       onPageChange={setPage}
       onThemeToggle={() => toggleColorScheme()}
     >
-      {schoolStructureError && (
-        <Alert color="red" mb="md" title={schoolStructureStrings.loadError} />
-      )}
+      {schoolStructureError && <Alert color="red" mb="md" title={schoolStructureStrings.loadError} />}
       {content}
       {showCreate && (
         <CreateAssignmentModal

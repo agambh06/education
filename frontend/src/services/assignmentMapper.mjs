@@ -6,7 +6,9 @@ export function mapApiAssignment(item, statuses) {
     id: item.id,
     title: item.title,
     description: item.description,
-    dueLabel: new Intl.DateTimeFormat("he-IL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.dueAt)),
+    dueLabel: new Intl.DateTimeFormat("he-IL", { dateStyle: "medium", timeStyle: "short" }).format(
+      new Date(item.dueAt),
+    ),
     status,
     studentId: item.studentId,
     subject: item.subject.name,
