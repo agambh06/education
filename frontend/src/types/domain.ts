@@ -22,15 +22,17 @@ export interface Student {
   id: string;
   firstName: string;
   lastName: string;
-  classId: string;
-  initials: string;
-  tone: ColorTone;
+  classId: string | null;
 }
 export interface SchoolClass {
   id: string;
   name: string;
   subject?: string;
   studentCount: number;
+}
+export interface Subject {
+  id: string;
+  name: string;
 }
 export interface Assignment {
   id: string;

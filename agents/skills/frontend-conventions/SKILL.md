@@ -575,9 +575,9 @@ explicitly requested.
 
 ## 19. Validation
 
-Always add new automated tests when implementing a new frontend issue.
-Cover the issue's acceptance criteria and affected behavior; for bug fixes,
-include a regression test that fails without the fix. Add new test cases to
+Add or update automated tests for every new or changed behavior, including
+frontend behavior. Cover the issue's acceptance criteria and affected behavior;
+for bug fixes, include a regression test that fails without the fix. Add new test cases to
 existing suites when appropriate rather than requiring a new file for every
 issue. Keep tests independent of personal databases and local developer state.
 

@@ -14,6 +14,8 @@ export const assignmentStrings = {
   subjects: ["מתמטיקה", "מדעים", "אנגלית"],
   classes: ["כיתה ו׳1", "כיתה ו׳2"],
   completedNotification: "המשימה סומנה כהושלמה. כל הכבוד!",
+  completionError: "לא ניתן לעדכן את המשימה. יש לנסות שוב מאוחר יותר.",
+  loadError: "לא ניתן לטעון את המשימות. יש לנסות שוב מאוחר יותר.",
   publishedNotification: "המשימה פורסמה למשפחות כיתה ו׳1.",
 } as const;
 

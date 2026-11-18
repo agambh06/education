@@ -50,6 +50,7 @@ export function createApp(options: AppOptions = {}) {
       },
     ),
   );
+  app.use("/api", requireAuth(resolveUser), schoolStructureRouter);
   app.use("/api", (_request, response) => {
     response.status(404).json({ message: "API route not found" });
   });
