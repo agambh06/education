@@ -9,8 +9,21 @@ datasource db {
 
 enum UserRole {
   PARENT
+  STUDENT
   TEACHER
   ADMIN
+}
+
+enum ParentLinkStatus {
+  PENDING
+  VERIFIED
+  REVOKED
+}
+
+enum ParentLinkConsentRequirement {
+  UNKNOWN
+  SELF_CONSENT
+  GUARDIAN
 }
 
 enum PublicationStatus {
@@ -41,51 +54,131 @@ model SchoolYear {
 }
 
 model User {
-  id            String              @id @default(cuid())
-  email         String              @unique
-  firstName     String
-  lastName      String
-  role          UserRole
-  parentLinks   ParentStudent[]
-  teaching      TeachingAssignment[]
-  assignments   Assignment[]
-  exams         Exam[]
-  parentTasks   ParentTask[]
-  studyPlans    StudyPlan[]        @relation("PlanAuthor")
-  resources     LearningResource[]
-  resourceVotes ResourceHelpfulVote[]
-  sentMessages  Message[]           @relation("SentMessages")
-  memberships   ConversationMember[]
-  notifications Notification[]
-  announcements Announcement[]      @relation("AnnouncementAuthor")
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  id                    String                           @id @default(cuid())
+  email                 String                           @unique
+  passwordHash          String?
+  firstName             String
+  lastName              String
+  role                  UserRole
+  accountVerifiedAt     DateTime?
+  studentProfile        Student?
+  parentLinks           ParentStudent[]
+  guardianVerifications ParentLinkGuardianVerification[]
+  teaching              TeachingAssignment[]
+  assignments           Assignment[]
+  exams                 Exam[]
+  parentTasks           ParentTask[]
+  studyPlans            StudyPlan[]                      @relation("PlanAuthor")
+  resources             LearningResource[]
+  resourceVotes         ResourceHelpfulVote[]
+  sentMessages          Message[]                        @relation("SentMessages")
+  memberships           ConversationMember[]
+  notifications         Notification[]
+  announcements         Announcement[]                   @relation("AnnouncementAuthor")
+  sessions              Session[]
+  createdAt             DateTime                         @default(now())
+  updatedAt             DateTime                         @updatedAt
 
   @@index([role])
 }
 
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 model Student {
-  id          String          @id @default(cuid())
-  firstName   String
-  lastName    String
-  classId     String
-  class       Class           @relation(fields: [classId], references: [id])
-  parents     ParentStudent[]
-  assignments Assignment[]
-  exams       Exam[]
-  parentTasks ParentTask[]
-  studyTasks  StudyTask[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id                           String                           @id @default(cuid())
+  firstName                    String
+  lastName                     String
+  userId                       String?                          @unique
+  user                         User?                            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  classId                      String?
+  class                        Class?                           @relation(fields: [classId], references: [id])
+  parentLinkConsentRequirement ParentLinkConsentRequirement     @default(UNKNOWN)
+  parents                      ParentStudent[]
+  parentLinkInvitations        ParentLinkInvitation[]
+  guardianVerifications        ParentLinkGuardianVerification[]
+  assignments                  Assignment[]
+  exams                        Exam[]
+  parentTasks                  ParentTask[]
+  studyTasks                   StudyTask[]
+  createdAt                    DateTime                         @default(now())
+  updatedAt                    DateTime                         @updatedAt
 }
 
 model ParentStudent {
-  parentId  String
-  studentId String
-  parent    User    @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id                     String                      @unique @default(cuid())
+  parentId               String
+  studentId              String
+  status                 ParentLinkStatus            @default(PENDING)
+  requestedAt            DateTime                    @default(now())
+  expiresAt              DateTime?
+  verifiedAt             DateTime?
+  verifiedById           String?
+  consentVersion         String?
+  guardianVerificationId String?
+  revokedAt              DateTime?
+  revokedById            String?
+  examsShared            Boolean                     @default(false)
+  activityShared         Boolean                     @default(false)
+  parent                 User                        @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  student                Student                     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reminderPreferences    LearningReminderPreference?
 
   @@id([parentId, studentId])
+  @@index([studentId, status])
+}
+
+model LearningReminderPreference {
+  parentId       String
+  studentId      String
+  // Keep the original request generation when a link is re-requested.
+  linkId         String
+  linkVerifiedAt DateTime
+  upcomingExams  Boolean       @default(false)
+  lowActivity    Boolean       @default(false)
+  timeZone       String        @default("Asia/Jerusalem")
+  updatedAt      DateTime      @updatedAt
+  link           ParentStudent @relation(fields: [parentId, studentId], references: [parentId, studentId], onDelete: Cascade)
+
+  @@id([parentId, studentId])
+}
+
+model ParentLinkInvitation {
+  id           String    @id @default(cuid())
+  studentId    String
+  tokenHash    String    @unique
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  consumedById String?
+  revokedAt    DateTime?
+  student      Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, expiresAt])
+}
+
+model ParentLinkGuardianVerification {
+  id                String    @id @default(cuid())
+  parentId          String
+  studentId         String
+  verifiedById      String
+  evidenceReference String
+  verifiedAt        DateTime
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  parent            User      @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  student           Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([parentId, studentId, expiresAt])
 }
 
 model Class {
@@ -168,7 +261,7 @@ model Exam {
 }
 
 model ParentTask {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   parentId      String
   studentId     String
   title         String
@@ -176,18 +269,19 @@ model ParentTask {
   durationMins  Int?
   attachmentUrl String?
   completedAt   DateTime?
-  parent        User     @relation(fields: [parentId], references: [id])
-  student       Student  @relation(fields: [studentId], references: [id])
-  createdAt     DateTime @default(now())
+  parent        User      @relation(fields: [parentId], references: [id])
+  student       Student   @relation(fields: [studentId], references: [id])
+  createdAt     DateTime  @default(now())
+
   @@index([studentId, dueAt])
 }
 
 model ExamTopic {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   examId    String
   name      String
   completed Boolean @default(false)
-  exam      Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
+  exam      Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
 }
 
 model StudyPlan {
@@ -216,17 +310,17 @@ model StudyTask {
 }
 
 model LearningResource {
-  id          String              @id @default(cuid())
+  id          String                @id @default(cuid())
   title       String
   resourceUrl String?
   note        String?
   source      String
   subjectId   String
   uploaderId  String
-  subject     Subject             @relation(fields: [subjectId], references: [id])
-  uploader    User                @relation(fields: [uploaderId], references: [id])
+  subject     Subject               @relation(fields: [subjectId], references: [id])
+  uploader    User                  @relation(fields: [uploaderId], references: [id])
   votes       ResourceHelpfulVote[]
-  createdAt   DateTime            @default(now())
+  createdAt   DateTime              @default(now())
 }
 
 model ResourceHelpfulVote {
@@ -234,6 +328,7 @@ model ResourceHelpfulVote {
   userId     String
   resource   LearningResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
   user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@id([resourceId, userId])
 }
 

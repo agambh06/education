@@ -4,12 +4,22 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test": "npm run prisma:generate && npm run test:typecheck && npm run test:api && npm run test:unit",
+    "test:api": "tsx --test tests/assignments.test.ts tests/exams.test.ts tests/health.test.ts tests/learning-reminders.test.mjs",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:typecheck": "tsc --project tsconfig.test.json",
+    "typecheck:test": "npm run test:typecheck",
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "test": "tsx --test tests/api.test.mjs",
+    "build": "npm run prisma:generate && tsc",
+    "test:reminders": "npm run prisma:generate && tsx --test tests/learning-reminders.test.mjs",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:status": "prisma migrate status",
+    "db:check": "node dist/scripts/check-database.js",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
@@ -23,8 +33,11 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.3",
+    "@types/supertest": "^7.2.1",
     "prisma": "^6.7.0",
+    "supertest": "^7.3.2",
     "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^5.1.0"
   }
 }

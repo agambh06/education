@@ -1,6 +1,11 @@
 import { Router } from "express";
+import { z } from "zod";
+import { getPrincipal } from "../../auth/authorization.js";
 import { assignmentsService } from "./assignments.service.js";
+
 export const assignmentsRouter = Router();
+const assignmentIdSchema = z.object({ id: z.string().trim().min(1) });
+
 function toAssignmentResponse(
   assignment:
     | Awaited<ReturnType<typeof assignmentsService.list>>[number]
@@ -19,13 +24,26 @@ function toAssignmentResponse(
   };
 }
 
-assignmentsRouter.get("/", async (request, response) => {
-  const studentId = typeof request.query.studentId === "string" ? request.query.studentId : undefined;
-  const assignments = await assignmentsService.list(studentId);
-  response.json(assignments.map(toAssignmentResponse));
+assignmentsRouter.get("/", async (_request, response) => {
+  const principal = getPrincipal(response);
+  if (principal?.role !== "STUDENT" || !principal.studentId) {
+    return response.status(403).json({ message: "Student access required" });
+  }
+
+  const assignments = await assignmentsService.list(principal.studentId);
+  return response.json(assignments.map(toAssignmentResponse));
 });
+
 assignmentsRouter.patch("/:id/complete", async (request, response) => {
-  const assignment = await assignmentsService.complete(request.params.id);
+  const parsed = assignmentIdSchema.safeParse(request.params);
+  if (!parsed.success) return response.status(400).json(parsed.error.flatten());
+
+  const principal = getPrincipal(response);
+  if (principal?.role !== "STUDENT" || !principal.studentId) {
+    return response.status(403).json({ message: "Student access required" });
+  }
+
+  const assignment = await assignmentsService.complete(parsed.data.id, principal.studentId);
   if (!assignment) return response.status(404).json({ message: "Assignment not found" });
   return response.json(toAssignmentResponse(assignment));
 });

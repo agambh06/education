@@ -1,4 +1,5 @@
-import { Button, Group, Select, Stack, Textarea, TextInput } from "@mantine/core";
+import { Button, Flex, Select, SimpleGrid, Stack, Textarea, TextInput } from "@mantine/core";
+import { IconPaperclip, IconPlus } from "@tabler/icons-react";
 import { Modal } from "../ui/Modal";
 import { assignmentStrings } from "./strings";
 
@@ -11,30 +12,42 @@ export function CreateAssignmentModal({ onClose, onPublish }: Props) {
   const forms = assignmentStrings;
 
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} title={forms.createTitle} closeButtonLabel={forms.close}>
       <form
         onSubmit={(event) => {
           event.preventDefault();
           onPublish();
         }}
       >
-        <Stack p="xl">
+        <Stack>
           <TextInput label={forms.titleLabel} placeholder={forms.titlePlaceholder} required />
-          <Group grow align="flex-start">
+          <SimpleGrid cols={{ base: 1, xs: 2 }}>
             <Select label={forms.subjectLabel} defaultValue={forms.subjects[0]} data={forms.subjects} />
             <Select label={forms.classLabel} defaultValue={forms.classes[0]} data={forms.classes} />
-          </Group>
+          </SimpleGrid>
           <Textarea label={forms.descriptionLabel} placeholder={forms.descriptionPlaceholder} minRows={3} />
-          <Group grow align="flex-end">
+          <SimpleGrid cols={{ base: 1, xs: 2 }} verticalSpacing="md" style={{ alignItems: "end" }}>
             <TextInput label={forms.dueDateLabel} type="date" required />
-            <Button variant="light">{forms.addFile}</Button>
-          </Group>
-          <Group justify="flex-end" mt="md">
-            <Button variant="subtle" onClick={onClose}>
+            <Button
+              variant="light"
+              mih={{ base: 44, sm: 36 }}
+              leftSection={<IconPaperclip size={18} stroke={1.75} aria-hidden="true" />}
+            >
+              {forms.addFile}
+            </Button>
+          </SimpleGrid>
+          <Flex direction={{ base: "column", xs: "row" }} justify="flex-end" gap="sm" mt="md">
+            <Button variant="subtle" mih={{ base: 44, sm: 36 }} onClick={onClose}>
               {forms.saveDraft}
             </Button>
-            <Button type="submit">{forms.publish}</Button>
-          </Group>
+            <Button
+              type="submit"
+              mih={{ base: 44, sm: 36 }}
+              leftSection={<IconPlus size={18} stroke={1.75} aria-hidden="true" />}
+            >
+              {forms.publish}
+            </Button>
+          </Flex>
         </Stack>
       </form>
     </Modal>

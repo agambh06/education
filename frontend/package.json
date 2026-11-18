@@ -10,26 +10,39 @@
     "format": "biome format --write src",
     "format:check": "biome format src",
     "preview": "vite preview",
+    "test": "vitest run && npm run test:parent-progress && npm run test:icons && npm run test:reminders",
+    "test:watch": "vitest",
     "verify:pwa": "node scripts/verify-pwa.mjs",
-    "test:pwa": "node --test scripts/pwa-status.test.mjs && npm run verify:pwa"
+    "test:pwa": "node --test scripts/pwa-status.test.mjs scripts/pwa-production.test.mjs && npm run verify:pwa",
+    "verify:pwa:production": "node scripts/verify-pwa-production.mjs",
+    "test:api-config": "node --test scripts/api-config.test.mjs",
+    "test:parent-progress": "node --test scripts/parent-progress*.test.mjs",
+    "test:icons": "node --test scripts/icons.test.mjs",
+    "test:reminders": "node --test scripts/learning-reminders.test.mjs"
   },
   "dependencies": {
     "@mantine/core": "^9.5.2",
     "@mantine/hooks": "^9.5.2",
     "@mantine/notifications": "^9.5.2",
+    "@tabler/icons-react": "^3.52.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.11",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
+    "jsdom": "^31.0.0",
     "oxlint": "^1.79.0",
     "typescript": "~6.0.2",
     "vite": "^8.2.2",
     "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^5.1.0",
     "workbox-window": "^7.4.1"
   }
 }
