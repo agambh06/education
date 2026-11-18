@@ -1,12 +1,12 @@
-import { Center, Loader, Text, useMantineColorScheme } from "@mantine/core";
+import { Alert, Center, Loader, Text, useMantineColorScheme } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
 import { CreateAssignmentModal } from "./components/assignments/CreateAssignmentModal";
 import { assignmentStrings } from "./components/assignments/strings";
 import { ALL_STUDENTS_ID } from "./constants/app";
-import { classes, students } from "./data/mockData";
 import { useExams } from "./hooks/useExams";
 import { useAssignments } from "./hooks/useAssignments";
+import { useSchoolStructure } from "./hooks/useSchoolStructure";
 import { AppLayout } from "./layouts/AppLayout";
 import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
 import { AuthPage } from "./pages/auth/AuthPage";
@@ -22,6 +22,7 @@ import { TeacherDashboardPage } from "./pages/teacher/TeacherDashboardPage";
 import { type AuthUser, authService } from "./services/authService";
 import { appStrings } from "./shared/strings/app";
 import { commonStrings } from "./shared/strings/common";
+import { schoolStructureStrings } from "./shared/strings/schoolStructure";
 import type { AppPage, AssignmentStatus, Role } from "./types/domain";
 
 function App() {
@@ -58,6 +59,7 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
   const [showCreate, setShowCreate] = useState(false);
   const examState = useExams(role === "student");
   const { visibleItems, complete, loading, error, reload } = useAssignments(ALL_STUDENTS_ID, filter);
+  const { classes, error: schoolStructureError } = useSchoolStructure();
 
   const markComplete = async (id: string) => {
     if (await complete(id)) {
@@ -94,6 +96,7 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
       onPageChange={setPage}
       onThemeToggle={() => toggleColorScheme()}
     >
+      {schoolStructureError && <Alert color="red" mb="md" title={schoolStructureStrings.loadError} />}
       {content}
       {showCreate && (
         <CreateAssignmentModal
@@ -123,7 +126,6 @@ function renderParentPage(
     return (
       <AssignmentsPage
         assignments={assignments}
-        students={students}
         filter={filter}
         onFilterChange={setFilter}
         onComplete={complete}

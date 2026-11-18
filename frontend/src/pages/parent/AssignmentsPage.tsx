@@ -4,12 +4,11 @@ import { AssignmentCard } from "../../components/assignments/AssignmentCard";
 import { assignmentDataStrings } from "../../components/assignments/strings";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { commonStrings } from "../../shared/strings/common";
-import type { Assignment, AssignmentStatus, Student } from "../../types/domain";
+import type { Assignment, AssignmentStatus } from "../../types/domain";
 import { parentStrings } from "./strings";
 
 interface Props {
   assignments: Assignment[];
-  students: Student[];
   filter: "הכול" | AssignmentStatus;
   onFilterChange: (filter: "הכול" | AssignmentStatus) => void;
   onComplete: (id: string) => void;
@@ -18,18 +17,7 @@ interface Props {
   onRetry: () => void;
 }
 
-export function AssignmentsPage({
-  assignments,
-  students,
-  filter,
-  onFilterChange,
-  onComplete,
-  loading,
-  error,
-  onRetry,
-}: Props) {
-  const studentName = (id: string) => students.find((student) => student.id === id)?.firstName ?? "";
-
+export function AssignmentsPage({ assignments, filter, onFilterChange, onComplete, loading, error, onRetry }: Props) {
   return (
     <>
       <PageHeader
@@ -69,7 +57,7 @@ export function AssignmentsPage({
             <AssignmentCard
               key={assignment.id}
               assignment={assignment}
-              studentName={assignment.studentName || studentName(assignment.studentId)}
+              studentName={assignment.studentName}
               onComplete={onComplete}
             />
           ))}

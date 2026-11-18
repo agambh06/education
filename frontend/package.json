@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "format": "biome format --write src",
     "format:check": "biome format src",
+    "test:unit": "node --test scripts/*.test.mjs",
     "preview": "vite preview",
     "test": "vitest run && npm run test:parent-progress && npm run test:icons && npm run test:reminders",
     "test:watch": "vitest",
