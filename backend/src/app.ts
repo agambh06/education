@@ -6,6 +6,7 @@ import { assignmentsRouter } from "./modules/assignments/assignments.routes.js";
 import { requireAuth, resolveAuthenticatedUser, resolveAuthenticatedUserId } from "./modules/auth/auth.middleware.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { examsRouter } from "./modules/exams/exams.routes.js";
+import { schoolStructureRouter } from "./modules/school-structure/school-structure.routes.js";
 import { createLearningRemindersRouter } from "./modules/notifications/learning-reminders.routes.js";
 import { LearningReminderPreferencesService } from "./modules/notifications/learning-reminders.service.js";
 import { learningReminderPreferenceStore } from "./modules/notifications/learning-reminders.store.js";
@@ -50,7 +51,7 @@ export function createApp(options: AppOptions = {}) {
       },
     ),
   );
-  app.use("/api", requireAuth(resolveUser), schoolStructureRouter);
+  app.use("/api", schoolStructureRouter);
   app.use("/api", (_request, response) => {
     response.status(404).json({ message: "API route not found" });
   });
