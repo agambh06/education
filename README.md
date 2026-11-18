@@ -377,15 +377,17 @@ Verify the deployed version:
 
 Follow the [production PostgreSQL runbook](docs/production-database.md) to provision
 Neon through Vercel, configure server-only secrets, apply tracked migrations, and
-verify connectivity. Neon is now provisioned, all tracked migrations are applied,
-and the live readiness endpoint has been verified successfully. The runbook records
-the resource, deployment, and remaining recovery planning before real data is introduced.
+verify connectivity. Neon is provisioned, and the last recorded production
+migration check predates the account-auth migration. Verify and apply all tracked
+migrations before relying on registration; the runbook records the resource,
+deployment, and remaining recovery planning before real data is introduced.
 
 `GET /api/health` remains process liveness. `GET /api/health/ready` runs read-only
 database/schema probes and returns HTTP 200 when available or a generic HTTP 503
-when configuration, connectivity, or required tables/columns are missing. It does
-not return credentials, hostnames, records, or migration details, and responses are
-not cached. `npm run db:check` additionally checks the tracked migration history.
+when configuration, connectivity, or required tables/columns are missing, including
+the auth session schema. It does not return credentials, hostnames, records, or
+migration details, and responses are not cached. `npm run db:check` additionally
+checks the tracked migration history.
 
 Parent linking and reminder preferences still require trusted authentication and
 reviewed verification providers; database provisioning does not enable these gates.

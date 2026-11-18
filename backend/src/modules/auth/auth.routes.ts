@@ -45,16 +45,20 @@ function clearSessionCookie(response: import("express").Response) {
   response.setHeader("Set-Cookie", `${sessionCookie}=; HttpOnly; SameSite=${sameSite}; Path=/; Max-Age=0${secure}`);
 }
 
-async function createSession(userId: string, response: import("express").Response) {
+async function createSession(userId: string, transaction: Pick<typeof prisma, "session">) {
   const token = randomBytes(32).toString("base64url");
-  await prisma.session.create({
+  await transaction.session.create({
     data: {
       tokenHash: createHash("sha256").update(token).digest("hex"),
       userId,
       expiresAt: new Date(Date.now() + sessionDurationMs),
     },
   });
-  setSessionCookie(response, token);
+  return token;
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }
 
 export const authRouter = Router();
@@ -72,20 +76,28 @@ authRouter.post("/register", async (request, response) => {
     return response.status(409).json({ message: "An account with this email already exists." });
 
   try {
-    const user = await prisma.user.create({
-      data: {
-        email,
-        firstName: parsed.data.firstName,
-        lastName: parsed.data.lastName,
-        role: "PARENT",
-        passwordHash: await hashPassword(parsed.data.password),
-      },
-      select: { id: true, email: true, firstName: true, lastName: true, role: true },
+    const passwordHash = await hashPassword(parsed.data.password);
+    const { user, token } = await prisma.$transaction(async (transaction) => {
+      const user = await transaction.user.create({
+        data: {
+          email,
+          firstName: parsed.data.firstName,
+          lastName: parsed.data.lastName,
+          role: "PARENT",
+          passwordHash,
+        },
+        select: { id: true, email: true, firstName: true, lastName: true, role: true },
+      });
+      const token = await createSession(user.id, transaction);
+      return { user, token };
     });
-    await createSession(user.id, response);
+    setSessionCookie(response, token);
     return response.status(201).json({ user });
-  } catch {
-    return response.status(409).json({ message: "An account with this email already exists." });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return response.status(409).json({ message: "An account with this email already exists." });
+    }
+    throw error;
   }
 });
 
@@ -96,7 +108,8 @@ authRouter.post("/login", async (request, response) => {
   if (!user?.passwordHash || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
     return response.status(401).json({ message: "Email or password is incorrect." });
   }
-  await createSession(user.id, response);
+  const token = await createSession(user.id, prisma);
+  setSessionCookie(response, token);
   return response.json({
     user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role },
   });
