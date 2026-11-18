@@ -19,8 +19,8 @@ export const currentTeacher: Teacher = {
   classIds: ["6a", "6b", "5a"],
 };
 export const students: Student[] = [
-  { id: "noa", firstName: "נועה", lastName: "כהן", classId: "6a", initials: "נכ", tone: "coral" },
-  { id: "daniel", firstName: "דניאל", lastName: "כהן", classId: "3b", initials: "דכ", tone: "sky" },
+  { id: "noa", firstName: "נועה", lastName: "כהן", classId: "6a" },
+  { id: "daniel", firstName: "דניאל", lastName: "כהן", classId: "3b" },
 ];
 export const classes: SchoolClass[] = [
   { id: "6a", name: "מתמטיקה · כיתה ו׳1", studentCount: 28 },
