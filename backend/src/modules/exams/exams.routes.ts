@@ -15,7 +15,12 @@ const studyTaskSchema = z.object({
   durationMins: z.number().int().positive(),
 });
 examsRouter.get("/", (request, response) =>
-  response.json(examsService.list(typeof request.query.studentId === "string" ? request.query.studentId : undefined)),
+  response.json(
+    examsService.list({
+      studentId: typeof request.query.studentId === "string" ? request.query.studentId : undefined,
+      classId: typeof request.query.classId === "string" ? request.query.classId : undefined,
+    }),
+  ),
 );
 examsRouter.post("/", (request, response) => {
   const parsed = createExamSchema.safeParse(request.body);

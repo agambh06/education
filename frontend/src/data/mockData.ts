@@ -1,4 +1,4 @@
-import type { Assignment, Exam, Message, Parent, SchoolClass, Student, Teacher } from "../types/domain";
+import type { Assignment, Message, Parent, SchoolClass, Student, Teacher } from "../types/domain";
 export const currentParent: Parent = {
   id: "parent-1",
   firstName: "אגם",
@@ -71,26 +71,6 @@ export const assignments: Assignment[] = [
     status: "באיחור",
     description: "לתרגל את רשימת המילים השבועית.",
     tone: "orange",
-  },
-];
-export const exams: Exam[] = [
-  {
-    id: "e1",
-    studentId: "noa",
-    subject: "מדעים",
-    title: "מערכת השמש",
-    teacher: "המורה רובין",
-    dateLabel: "13 במרץ",
-    time: "10:30",
-  },
-  {
-    id: "e2",
-    studentId: "noa",
-    subject: "מתמטיקה",
-    title: "שברים ומספרים עשרוניים",
-    teacher: "המורה לוי",
-    dateLabel: "19 במרץ",
-    time: "09:00",
   },
 ];
 export const messages: Message[] = [

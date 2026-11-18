@@ -7,9 +7,11 @@ import { studentStrings } from "./strings";
 interface Props {
   assignments: Assignment[];
   exams: Exam[];
+  examsLoading: boolean;
+  examsError: boolean;
   onComplete: (id: string) => void;
 }
-export function StudentDashboardPage({ assignments, exams, onComplete }: Props) {
+export function StudentDashboardPage({ assignments, exams, examsLoading, examsError, onComplete }: Props) {
   const completed = assignments.filter((item) => item.status === commonStrings.completed).length;
   return (
     <Stack>
@@ -60,17 +62,36 @@ export function StudentDashboardPage({ assignments, exams, onComplete }: Props) 
           <Title order={2} fz="h3">
             {studentStrings.upcomingExams}
           </Title>
-          {exams.slice(0, 1).map((exam) => (
-            <Stack key={exam.id} mt="md">
-              <Text fw={700}>
-                {exam.subject}: {exam.title}
-              </Text>
-              <Progress value={60} />
-              <Text c="dimmed" size="sm">
-                {studentStrings.preparation}
-              </Text>
-            </Stack>
-          ))}
+          {examsLoading ? (
+            <Text c="dimmed" mt="md">
+              {studentStrings.examsLoading}
+            </Text>
+          ) : examsError ? (
+            <Text c="red" mt="md" role="alert">
+              {studentStrings.examsError}
+            </Text>
+          ) : exams.length === 0 ? (
+            <Text c="dimmed" mt="md">
+              {studentStrings.examsEmpty}
+            </Text>
+          ) : (
+            exams.slice(0, 1).map((exam) => {
+              const preparationPercent = exam.studyTasks.length
+                ? Math.round((exam.studyTasks.filter((task) => task.completed).length / exam.studyTasks.length) * 100)
+                : 0;
+              return (
+                <Stack key={exam.id} mt="md">
+                  <Text fw={700}>
+                    {exam.subject}: {exam.title}
+                  </Text>
+                  <Progress value={preparationPercent} />
+                  <Text c="dimmed" size="sm">
+                    {studentStrings.preparation(preparationPercent)}
+                  </Text>
+                </Stack>
+              );
+            })
+          )}
         </Paper>
       </SimpleGrid>
     </Stack>

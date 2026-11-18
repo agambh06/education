@@ -4,7 +4,8 @@ import { useState } from "react";
 import { CreateAssignmentModal } from "./components/assignments/CreateAssignmentModal";
 import { assignmentStrings } from "./components/assignments/strings";
 import { ALL_STUDENTS_ID } from "./constants/app";
-import { classes, exams, students } from "./data/mockData";
+import { classes, students } from "./data/mockData";
+import { useExams } from "./hooks/useExams";
 import { useAssignments } from "./hooks/useAssignments";
 import { AppLayout } from "./layouts/AppLayout";
 import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
@@ -26,6 +27,8 @@ function App() {
   const [filter, setFilter] = useState<"הכול" | AssignmentStatus>(commonStrings.all);
   const [showCreate, setShowCreate] = useState(false);
   const { visibleItems, complete } = useAssignments(studentId, filter);
+  const examStudentId = role === "student" ? students[0]?.id : studentId === ALL_STUDENTS_ID ? undefined : studentId;
+  const examState = useExams(examStudentId);
   const changeRole = (nextRole: Role) => {
     setRole(nextRole);
     setPage("סקירה");
@@ -36,9 +39,15 @@ function App() {
   };
   const content =
     role === "parent" ? (
-      renderParentPage(page, visibleItems, studentId, setStudentId, filter, setFilter, markComplete)
+      renderParentPage(page, visibleItems, studentId, setStudentId, filter, setFilter, markComplete, examState)
     ) : role === "student" ? (
-      <StudentDashboardPage assignments={visibleItems} exams={exams} onComplete={markComplete} />
+      <StudentDashboardPage
+        assignments={visibleItems}
+        exams={examState.exams}
+        examsLoading={examState.loading}
+        examsError={examState.error}
+        onComplete={markComplete}
+      />
     ) : role === "teacher" ? (
       <TeacherDashboardPage classes={classes} onCreate={() => setShowCreate(true)} />
     ) : (
@@ -74,6 +83,7 @@ function renderParentPage(
   filter: "הכול" | AssignmentStatus,
   setFilter: (filter: "הכול" | AssignmentStatus) => void,
   complete: (id: string) => void,
+  examState: ReturnType<typeof useExams>,
 ) {
   if (page === "משימות")
     return (
@@ -85,7 +95,8 @@ function renderParentPage(
         onComplete={complete}
       />
     );
-  if (page === "מבחנים") return <ExamsPage />;
+  if (page === "מבחנים")
+    return <ExamsPage {...examState} studentName={students.find((student) => student.id === studentId)?.firstName} />;
   if (page === "לוח שנה") return <CalendarPage />;
   if (page === "הודעות") return <MessagesPage />;
   return (

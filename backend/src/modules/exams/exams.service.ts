@@ -31,8 +31,13 @@ const exams: DemoExam[] = [
   },
 ];
 export const examsService = {
-  list: (studentId?: string) =>
-    studentId ? exams.filter((exam) => exam.studentId === studentId && exam.published) : exams,
+  list: ({ studentId, classId }: { studentId?: string; classId?: string } = {}) =>
+    exams.filter(
+      (exam) =>
+        exam.published &&
+        (!studentId || exam.studentId === studentId) &&
+        (!classId || exam.classId === classId),
+    ),
   publish: (exam: Omit<DemoExam, "id" | "published" | "studyTasks">) => {
     const created: DemoExam = { ...exam, id: "exam-" + (exams.length + 1), published: true, studyTasks: [] };
     exams.push(created);

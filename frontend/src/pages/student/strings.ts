@@ -9,5 +9,8 @@ export const studentStrings = {
   parentTaskSubheading: "משימה אישית שתכננתם יחד.",
   parentTask: "לתרגל אוצר מילים",
   upcomingExams: "מבחנים קרובים",
-  preparation: "60% הכנה · בעוד 4 ימים",
+  examsLoading: "טוען מבחנים...",
+  examsError: "לא ניתן לטעון את המבחנים כרגע.",
+  examsEmpty: "אין מבחנים קרובים.",
+  preparation: (percentage: number) => `התקדמות בהכנה: ${percentage}%`,
 } as const;
