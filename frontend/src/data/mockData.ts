@@ -1,4 +1,4 @@
-import type { Assignment, Exam, Message, Parent, SchoolClass, Student, Teacher } from "../types/domain";
+import type { Exam, Message, Parent, SchoolClass, Student, Teacher } from "../types/domain";
 export const currentParent: Parent = {
   id: "parent-1",
   firstName: "אגם",
@@ -26,52 +26,6 @@ export const classes: SchoolClass[] = [
   { id: "6a", name: "מתמטיקה · כיתה ו׳1", studentCount: 28 },
   { id: "6b", name: "מתמטיקה · כיתה ו׳2", studentCount: 26 },
   { id: "5a", name: "סדנת מתמטיקה · כיתה ה׳", studentCount: 24 },
-];
-export const assignments: Assignment[] = [
-  {
-    id: "a1",
-    studentId: "noa",
-    subject: "מתמטיקה",
-    teacher: "המורה לוי",
-    title: "דף תרגול שברים",
-    dueLabel: "מחר, 09:00",
-    status: "לביצוע",
-    description: "יש להשלים את שאלות 1–12 בדף העבודה המצורף.",
-    tone: "blue",
-  },
-  {
-    id: "a2",
-    studentId: "daniel",
-    subject: "אנגלית",
-    teacher: "המורה גרין",
-    title: "קריאת ״הגן הסודי״",
-    dueLabel: "ה׳, 14 במרץ",
-    status: "לביצוע",
-    description: "לקרוא פרקים 3–4 ולרשום שלוש מילים חדשות.",
-    tone: "teal",
-  },
-  {
-    id: "a3",
-    studentId: "noa",
-    subject: "מדעים",
-    teacher: "המורה רובין",
-    title: "מחקר על מערכת השמש",
-    dueLabel: "ב׳, 18 במרץ",
-    status: "הושלם",
-    description: "להכין דף מידע קצר על כוכב הלכת שנבחר.",
-    tone: "purple",
-  },
-  {
-    id: "a4",
-    studentId: "daniel",
-    subject: "עברית",
-    teacher: "המורה בר",
-    title: "תרגול איות",
-    dueLabel: "מועד הגשה: 8 במרץ",
-    status: "באיחור",
-    description: "לתרגל את רשימת המילים השבועית.",
-    tone: "orange",
-  },
 ];
 export const exams: Exam[] = [
   {

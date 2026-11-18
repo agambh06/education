@@ -35,9 +35,11 @@ export interface SchoolClass {
 export interface Assignment {
   id: string;
   studentId: string;
+  studentName: string;
   subject: string;
   teacher: string;
   title: string;
+  dueAt: string;
   dueLabel: string;
   status: AssignmentStatus;
   description: string;

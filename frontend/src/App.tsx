@@ -25,18 +25,31 @@ function App() {
   const [studentId, setStudentId] = useState(ALL_STUDENTS_ID);
   const [filter, setFilter] = useState<"הכול" | AssignmentStatus>(commonStrings.all);
   const [showCreate, setShowCreate] = useState(false);
-  const { visibleItems, complete } = useAssignments(studentId, filter);
+  const selectedStudentName = students.find((student) => student.id === studentId)?.firstName;
+  const { visibleItems, complete, loading, error, reload } = useAssignments(studentId, filter, selectedStudentName);
   const changeRole = (nextRole: Role) => {
     setRole(nextRole);
     setPage("סקירה");
   };
-  const markComplete = (id: string) => {
-    complete(id);
-    notifications.show({ message: assignmentStrings.completedNotification, color: "teal" });
+  const markComplete = async (id: string) => {
+    if (await complete(id)) {
+      notifications.show({ message: assignmentStrings.completedNotification, color: "teal" });
+    }
   };
   const content =
     role === "parent" ? (
-      renderParentPage(page, visibleItems, studentId, setStudentId, filter, setFilter, markComplete)
+      renderParentPage(
+        page,
+        visibleItems,
+        studentId,
+        setStudentId,
+        filter,
+        setFilter,
+        markComplete,
+        loading,
+        error,
+        reload,
+      )
     ) : role === "student" ? (
       <StudentDashboardPage assignments={visibleItems} exams={exams} onComplete={markComplete} />
     ) : role === "teacher" ? (
@@ -74,6 +87,9 @@ function renderParentPage(
   filter: "הכול" | AssignmentStatus,
   setFilter: (filter: "הכול" | AssignmentStatus) => void,
   complete: (id: string) => void,
+  loading: boolean,
+  error: string | null,
+  reload: () => void,
 ) {
   if (page === "משימות")
     return (
@@ -83,6 +99,9 @@ function renderParentPage(
         filter={filter}
         onFilterChange={setFilter}
         onComplete={complete}
+        loading={loading}
+        error={error}
+        onRetry={reload}
       />
     );
   if (page === "מבחנים") return <ExamsPage />;
