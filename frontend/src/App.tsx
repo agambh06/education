@@ -55,14 +55,16 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const [filter, setFilter] = useState<"הכול" | AssignmentStatus>(commonStrings.all);
   const [showCreate, setShowCreate] = useState(false);
-  const { visibleItems, complete } = useAssignments(ALL_STUDENTS_ID, filter);
-  const markComplete = (id: string) => {
-    complete(id);
-    notifications.show({ message: assignmentStrings.completedNotification, color: "teal" });
+  const { visibleItems, complete, loading, error, reload } = useAssignments(ALL_STUDENTS_ID, filter);
+
+  const markComplete = async (id: string) => {
+    if (await complete(id)) {
+      notifications.show({ message: assignmentStrings.completedNotification, color: "teal" });
+    }
   };
   const content =
     role === "parent" ? (
-      renderParentPage(page, visibleItems, filter, setFilter, markComplete)
+      renderParentPage(page, visibleItems, filter, setFilter, markComplete, loading, error, reload)
     ) : role === "student" ? (
       <StudentDashboardPage assignments={visibleItems} exams={exams} onComplete={markComplete} />
     ) : role === "teacher" ? (
@@ -104,6 +106,9 @@ function renderParentPage(
   filter: "הכול" | AssignmentStatus,
   setFilter: (filter: "הכול" | AssignmentStatus) => void,
   complete: (id: string) => void,
+  loading: boolean,
+  error: string | null,
+  reload: () => void,
 ) {
   if (page === "משימות")
     return (
@@ -113,6 +118,9 @@ function renderParentPage(
         filter={filter}
         onFilterChange={setFilter}
         onComplete={complete}
+        loading={loading}
+        error={error}
+        onRetry={reload}
       />
     );
   if (page === "מבחנים") return <ExamsPage />;

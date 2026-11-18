@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { assignmentStrings } from "./components/assignments/strings";
-import { assignments, students } from "./data/mockData";
+import { students } from "./data/mockData";
 import { adminStrings } from "./pages/admin/strings";
 import { learningReminderStrings } from "./pages/parent/learningReminderStrings";
 import { parentStrings } from "./pages/parent/strings";
@@ -14,6 +14,7 @@ import { teacherStrings } from "./pages/teacher/strings";
 import type { LearningReminderStatus } from "./services/learningRemindersService";
 import { appStrings, navigationStrings } from "./shared/strings/app";
 import { commonStrings } from "./shared/strings/common";
+import type { Assignment } from "./types/domain";
 import type { ParentLearningProgress, ParentLinkedChild } from "./types/parentProgress";
 
 const users = {
@@ -23,6 +24,69 @@ const users = {
   ADMIN: { id: "admin-1", email: "admin@example.com", firstName: "Test", lastName: "Admin", role: "ADMIN" },
 } as const;
 let activeUser: (typeof users)[keyof typeof users] = users.PARENT;
+const initialAssignments: Assignment[] = [
+  {
+    id: "a1",
+    studentId: "noa",
+    studentName: "נועה כהן",
+    subject: "מתמטיקה",
+    teacher: "המורה לוי",
+    title: "דף תרגול שברים",
+    dueAt: "2026-11-20T09:00:00.000Z",
+    dueLabel: "20 בנובמבר 2026 בשעה 11:00",
+    status: commonStrings.toDo,
+    description: "יש להשלים את שאלות 1–12 בדף העבודה המצורף.",
+    tone: "blue",
+  },
+  {
+    id: "a2",
+    studentId: "daniel",
+    studentName: "דניאל כהן",
+    subject: "אנגלית",
+    teacher: "המורה גרין",
+    title: "קריאת ״הגן הסודי״",
+    dueAt: "2026-11-21T09:00:00.000Z",
+    dueLabel: "21 בנובמבר 2026 בשעה 11:00",
+    status: commonStrings.toDo,
+    description: "לקרוא פרקים 3–4 ולרשום שלוש מילים חדשות.",
+    tone: "teal",
+  },
+  {
+    id: "a3",
+    studentId: "noa",
+    studentName: "נועה כהן",
+    subject: "מדעים",
+    teacher: "המורה רובין",
+    title: "מחקר על מערכת השמש",
+    dueAt: "2026-11-22T09:00:00.000Z",
+    dueLabel: "22 בנובמבר 2026 בשעה 11:00",
+    status: commonStrings.completed,
+    description: "להכין דף מידע קצר על כוכב הלכת שנבחר.",
+    tone: "purple",
+  },
+  {
+    id: "a4",
+    studentId: "daniel",
+    studentName: "דניאל כהן",
+    subject: "עברית",
+    teacher: "המורה בר",
+    title: "תרגול איות",
+    dueAt: "2026-11-10T09:00:00.000Z",
+    dueLabel: "10 בנובמבר 2026 בשעה 11:00",
+    status: commonStrings.overdue,
+    description: "לתרגל את רשימת המילים השבועית.",
+    tone: "orange",
+  },
+];
+let assignmentResponses = initialAssignments.map((assignment) => ({
+  ...assignment,
+  status:
+    assignment.status === commonStrings.toDo
+      ? ("TODO" as const)
+      : assignment.status === commonStrings.completed
+        ? ("COMPLETED" as const)
+        : ("OVERDUE" as const),
+}));
 
 function mockParentProgress(
   children: ParentLinkedChild[],
@@ -31,6 +95,14 @@ function mockParentProgress(
   const fetchMock = vi.fn<typeof fetch>(async (input) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (url.endsWith("/auth/me")) return Response.json({ user: activeUser });
+    if (url.endsWith("/assignments")) return Response.json(assignmentResponses);
+    const completing = url.match(/\/assignments\/([^/]+)\/complete$/);
+    if (completing) {
+      assignmentResponses = assignmentResponses.map((assignment) =>
+        assignment.id === completing[1] ? { ...assignment, status: "COMPLETED" as const } : assignment,
+      );
+      return Response.json(assignmentResponses.find((assignment) => assignment.id === completing[1]));
+    }
     if (url.endsWith("/parent/children")) return Response.json({ children });
     const child = children.find(({ id }) => url.endsWith(`/parent/children/${id}/learning-progress`));
     if (child && progressByChild[child.id]) return Response.json(progressByChild[child.id]);
@@ -71,6 +143,15 @@ async function renderApp() {
 }
 
 beforeEach(() => {
+  assignmentResponses = initialAssignments.map((assignment) => ({
+    ...assignment,
+    status:
+      assignment.status === commonStrings.toDo
+        ? "TODO"
+        : assignment.status === commonStrings.completed
+          ? "COMPLETED"
+          : "OVERDUE",
+  }));
   mockParentProgress([]);
   activeUser = users.PARENT;
 });
@@ -80,19 +161,19 @@ describe("assignment flows", () => {
   it("filters assignments by each status and restores the full list", async () => {
     const user = await renderApp();
     await user.click(screen.getByText(navigationStrings.assignments, { exact: true }));
-    for (const assignment of assignments) expect(screen.getByText(assignment.title)).toBeVisible();
+    for (const assignment of initialAssignments) expect(await screen.findByText(assignment.title)).toBeVisible();
 
     for (const status of [commonStrings.toDo, commonStrings.completed, commonStrings.overdue]) {
       await user.click(screen.getByRole("tab", { name: status }));
       expect(screen.getByRole("tab", { name: status })).toHaveAttribute("aria-selected", "true");
-      for (const assignment of assignments) {
+      for (const assignment of initialAssignments) {
         if (assignment.status === status) expect(screen.getByText(assignment.title)).toBeVisible();
         else expect(screen.queryByText(assignment.title)).not.toBeInTheDocument();
       }
     }
 
     await user.click(screen.getByRole("tab", { name: commonStrings.all }));
-    for (const assignment of assignments) expect(screen.getByText(assignment.title)).toBeVisible();
+    for (const assignment of initialAssignments) expect(await screen.findByText(assignment.title)).toBeVisible();
   });
 
   it("keeps verified progress child selection separate from assignment status filters across navigation", async () => {
@@ -109,12 +190,12 @@ describe("assignment flows", () => {
     expect(screen.queryByRole("heading", { name: noaProgress.exams[0].title })).not.toBeInTheDocument();
     await user.click(screen.getByText(navigationStrings.assignments, { exact: true }));
 
-    for (const assignment of assignments) expect(screen.getByText(assignment.title)).toBeVisible();
+    for (const assignment of initialAssignments) expect(await screen.findByText(assignment.title)).toBeVisible();
     await user.click(screen.getByRole("tab", { name: commonStrings.toDo }));
-    expect(screen.getByText(assignments[0].title)).toBeVisible();
-    expect(screen.getByText(assignments[1].title)).toBeVisible();
-    expect(screen.queryByText(assignments[2].title)).not.toBeInTheDocument();
-    expect(screen.queryByText(assignments[3].title)).not.toBeInTheDocument();
+    expect(screen.getByText(initialAssignments[0].title)).toBeVisible();
+    expect(screen.getByText(initialAssignments[1].title)).toBeVisible();
+    expect(screen.queryByText(initialAssignments[2].title)).not.toBeInTheDocument();
+    expect(screen.queryByText(initialAssignments[3].title)).not.toBeInTheDocument();
 
     await user.click(screen.getByText(navigationStrings.overview, { exact: true }));
     expect(await screen.findByRole("heading", { name: noaProgress.exams[0].title })).toBeVisible();
@@ -123,10 +204,10 @@ describe("assignment flows", () => {
     );
     await user.click(screen.getByText(navigationStrings.assignments, { exact: true }));
     expect(screen.getByRole("tab", { name: commonStrings.toDo })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText(assignments[0].title)).toBeVisible();
-    expect(screen.getByText(assignments[1].title)).toBeVisible();
-    expect(screen.queryByText(assignments[2].title)).not.toBeInTheDocument();
-    expect(screen.queryByText(assignments[3].title)).not.toBeInTheDocument();
+    expect(screen.getByText(initialAssignments[0].title)).toBeVisible();
+    expect(screen.getByText(initialAssignments[1].title)).toBeVisible();
+    expect(screen.queryByText(initialAssignments[2].title)).not.toBeInTheDocument();
+    expect(screen.queryByText(initialAssignments[3].title)).not.toBeInTheDocument();
   });
 
   it("marks a task complete through the real hook and updates both status tabs", async () => {
@@ -135,27 +216,27 @@ describe("assignment flows", () => {
     await user.click(screen.getByRole("tab", { name: commonStrings.toDo }));
     await user.click(screen.getAllByRole("button", { name: commonStrings.markComplete })[0]);
 
-    expect(screen.queryByText(assignments[0].title)).not.toBeInTheDocument();
-    expect(screen.getByText(assignments[1].title)).toBeVisible();
+    expect(screen.queryByText(initialAssignments[0].title)).not.toBeInTheDocument();
+    expect(screen.getByText(initialAssignments[1].title)).toBeVisible();
     expect(screen.getByText(assignmentStrings.completedNotification)).toBeVisible();
     expect(screen.getAllByRole("button", { name: commonStrings.markComplete })).toHaveLength(1);
     await user.click(screen.getByRole("tab", { name: commonStrings.completed }));
-    expect(screen.getByText(assignments[0].title)).toBeVisible();
-    expect(screen.getByText(assignments[2].title)).toBeVisible();
+    expect(screen.getByText(initialAssignments[0].title)).toBeVisible();
+    expect(screen.getByText(initialAssignments[2].title)).toBeVisible();
     expect(screen.queryByRole("button", { name: commonStrings.markComplete })).not.toBeInTheDocument();
   });
 
   it("updates the student's completion summary after completing an assignment", async () => {
     activeUser = users.STUDENT;
     const user = await renderApp();
-    expect(screen.getByText(studentStrings.completionSummary(1, 4))).toBeVisible();
+    expect(await screen.findByText(studentStrings.completionSummary(1, 4))).toBeVisible();
     const tasks = screen.getByRole("heading", { name: studentStrings.taskHeading }).parentElement;
     expect(tasks).not.toBeNull();
     if (!tasks) throw new Error("Student task section was not rendered");
     await user.click(within(tasks).getAllByRole("button", { name: commonStrings.done })[0]);
-    expect(screen.getByText(studentStrings.completionSummary(2, 4))).toBeVisible();
+    expect(await screen.findByText(studentStrings.completionSummary(2, 4))).toBeVisible();
     expect(within(tasks).getAllByRole("button", { name: commonStrings.done })).toHaveLength(1);
-    expect(screen.getByText(assignments[0].title)).toBeVisible();
+    expect(screen.getByText(initialAssignments[0].title)).toBeVisible();
   });
 });
 

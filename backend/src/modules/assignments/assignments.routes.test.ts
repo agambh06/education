@@ -9,23 +9,49 @@ const assignmentSchema = z
     title: z.string(),
     subject: z.string(),
     studentId: z.string(),
+    studentName: z.string(),
+    teacher: z.string(),
     status: z.enum(["TODO", "COMPLETED", "OVERDUE"]),
     dueAt: z.string().datetime(),
+    description: z.string(),
   })
   .strict();
 
 describe("assignment API", () => {
   let app: Express;
   let service: typeof import("./assignments.service.js").assignmentsService;
+  let currentAssignment: Awaited<ReturnType<typeof import("./assignments.service.js").assignmentsService.list>>[number];
 
   beforeEach(async () => {
-    // Each test gets fresh demo data, so completing an assignment cannot affect another test.
     vi.resetModules();
     const { createApp } = await import("../../app.js");
     app = createApp({
       resolveAuthenticatedUser: async () => ({ userId: "test-user", role: "STUDENT", studentId: "noa" }),
     });
     ({ assignmentsService: service } = await import("./assignments.service.js"));
+    currentAssignment = {
+      id: "a1",
+      title: "דף תרגול שברים",
+      description: "יש להשלים את שאלות 1–12 בדף העבודה המצורף.",
+      studentId: "noa",
+      status: "TODO",
+      dueAt: new Date("2026-03-12T09:00:00.000Z"),
+      subject: { name: "מתמטיקה" },
+      teacher: { firstName: "יעל", lastName: "לוי" },
+      student: { firstName: "נועה", lastName: "כהן" },
+    } as unknown as typeof currentAssignment;
+    vi.spyOn(service, "list").mockImplementation((studentId) =>
+      Promise.resolve(studentId === currentAssignment.studentId ? [currentAssignment] : []) as ReturnType<
+        typeof service.list
+      >,
+    );
+    vi.spyOn(service, "complete").mockImplementation((id, studentId) => {
+      if (id !== currentAssignment.id || studentId !== currentAssignment.studentId) {
+        return Promise.resolve(undefined) as ReturnType<typeof service.complete>;
+      }
+      currentAssignment = { ...currentAssignment, status: "COMPLETED" };
+      return Promise.resolve(currentAssignment) as ReturnType<typeof service.complete>;
+    });
   });
 
   it("lists assignments with the expected response contract", async () => {

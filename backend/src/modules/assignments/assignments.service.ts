@@ -1,28 +1,33 @@
-export type DemoAssignmentStatus = "TODO" | "COMPLETED" | "OVERDUE";
-export interface DemoAssignment {
-  id: string;
-  title: string;
-  subject: string;
-  studentId: string;
-  status: DemoAssignmentStatus;
-  dueAt: string;
+import type { PrismaClient } from "@prisma/client";
+import { database } from "../../config/database.js";
+
+export function createAssignmentsService(prisma: PrismaClient) {
+  return {
+    list: (studentId: string) =>
+      prisma.assignment.findMany({
+        where: { publication: "PUBLISHED", studentId },
+        include: { subject: true, teacher: true, student: true },
+        orderBy: { dueAt: "asc" },
+      }),
+    complete: async (id: string, studentId: string) => {
+      const result = await prisma.assignment.updateMany({
+        where: { id, studentId, publication: "PUBLISHED" },
+        data: { status: "COMPLETED" },
+      });
+
+      if (result.count === 0) return undefined;
+
+      return (
+        (await prisma.assignment.findFirst({
+          where: { id, studentId },
+          include: { subject: true, teacher: true, student: true },
+        })) ?? undefined
+      );
+    },
+  };
 }
-const assignments: DemoAssignment[] = [
-  {
-    id: "a1",
-    title: "דף תרגול שברים",
-    subject: "מתמטיקה",
-    studentId: "noa",
-    status: "TODO",
-    dueAt: "2026-03-12T09:00:00.000Z",
-  },
-];
+
 export const assignmentsService = {
-  list: (studentId: string) => assignments.filter((item) => item.studentId === studentId),
-  complete: (id: string, studentId: string) => {
-    const assignment = assignments.find((item) => item.id === id && item.studentId === studentId);
-    if (!assignment) return undefined;
-    assignment.status = "COMPLETED";
-    return assignment;
-  },
+  list: (studentId: string) => createAssignmentsService(database()).list(studentId),
+  complete: (id: string, studentId: string) => createAssignmentsService(database()).complete(id, studentId),
 };

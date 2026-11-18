@@ -1,44 +1,91 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { DemoAssignment } from "../src/modules/assignments/assignments.service.js";
-import { setupTestApi } from "./api.js";
+import type { Prisma, PrismaClient } from "@prisma/client";
 
-const requestJson = setupTestApi();
+process.env.NODE_ENV = "test";
+process.env.DATABASE_URL ??= "postgresql://test:test@127.0.0.1:1/education_api_test";
 
-test("GET /api/assignments lists only the authenticated student's assignments", async () => {
-  const assignments = await requestJson<DemoAssignment[]>("/api/assignments", 200);
-  assert.equal(assignments.length, 1);
-  assert(["TODO", "COMPLETED", "OVERDUE"].includes(assignments[0].status));
-  assert.deepEqual(assignments[0], {
-    id: "a1",
-    title: "דף תרגול שברים",
-    subject: "מתמטיקה",
-    studentId: "noa",
-    status: assignments[0].status,
-    dueAt: "2026-03-12T09:00:00.000Z",
-  });
-  assert.deepEqual(await requestJson("/api/assignments?studentId=noa", 200), assignments);
-  assert.deepEqual(await requestJson("/api/assignments?studentId=unknown-student", 200), assignments);
+const { createAssignmentsService } = await import("../src/modules/assignments/assignments.service.js");
+
+const assignment = {
+  id: "assignment-1",
+  studentId: "student-1",
+  title: "Fractions practice",
+  description: "Complete questions 1–12.",
+  dueAt: new Date("2026-11-20T09:00:00.000Z"),
+  status: "TODO",
+  publication: "PUBLISHED",
+  subject: { name: "Math" },
+  teacher: { firstName: "Yael", lastName: "Levi" },
+  student: { firstName: "Noa", lastName: "Cohen" },
+};
+
+test("lists published assignments scoped to the authenticated student", async () => {
+  let query: Prisma.AssignmentFindManyArgs | undefined;
+  const prisma = {
+    assignment: {
+      findMany: async (args: Prisma.AssignmentFindManyArgs) => {
+        query = args;
+        return [assignment];
+      },
+    },
+  } as unknown as PrismaClient;
+  const service = createAssignmentsService(prisma);
+
+  assert.deepEqual(await service.list("student-1"), [assignment]);
+  assert.deepEqual(query?.where, { publication: "PUBLISHED", studentId: "student-1" });
+  assert.deepEqual(query?.include, { subject: true, teacher: true, student: true });
+  assert.deepEqual(query?.orderBy, { dueAt: "asc" });
 });
 
-test("PATCH /api/assignments/:id/complete persists completion and is idempotent", async () => {
-  const [original] = await requestJson<DemoAssignment[]>("/api/assignments", 200);
-  assert(original);
-  assert.equal(original.status, "TODO");
+test("completion updates only the matching published assignment for that student", async () => {
+  const calls: Array<[string, unknown]> = [];
+  const prisma = {
+    assignment: {
+      updateMany: async (args: Prisma.AssignmentUpdateManyArgs) => {
+        calls.push(["updateMany", args]);
+        return { count: 1 };
+      },
+      findFirst: async (args: Prisma.AssignmentFindFirstArgs) => {
+        calls.push(["findFirst", args]);
+        return { ...assignment, status: "COMPLETED" };
+      },
+    },
+  } as unknown as PrismaClient;
+  const service = createAssignmentsService(prisma);
 
-  const completed = await requestJson<DemoAssignment>(`/api/assignments/${original.id}/complete`, 200, {
-    method: "PATCH",
-  });
-  assert.deepEqual(completed, { ...original, status: "COMPLETED" });
-  assert.deepEqual(await requestJson("/api/assignments", 200), [completed]);
-  assert.deepEqual(await requestJson(`/api/assignments/${original.id}/complete`, 200, { method: "PATCH" }), completed);
-  assert.deepEqual(await requestJson("/api/assignments", 200), [completed]);
+  assert.equal((await service.complete("assignment-1", "student-1"))?.status, "COMPLETED");
+  assert.deepEqual(calls, [
+    [
+      "updateMany",
+      {
+        where: { id: "assignment-1", studentId: "student-1", publication: "PUBLISHED" },
+        data: { status: "COMPLETED" },
+      },
+    ],
+    [
+      "findFirst",
+      {
+        where: { id: "assignment-1", studentId: "student-1" },
+        include: { subject: true, teacher: true, student: true },
+      },
+    ],
+  ]);
 });
 
-test("completing a missing assignment returns 404 without changing assignments", async () => {
-  const before = await requestJson("/api/assignments", 200);
-  assert.deepEqual(await requestJson("/api/assignments/missing/complete", 404, { method: "PATCH" }), {
-    message: "Assignment not found",
-  });
-  assert.deepEqual(await requestJson("/api/assignments", 200), before);
+test("missing assignments are not read after the scoped update changes zero rows", async () => {
+  let fetched = false;
+  const prisma = {
+    assignment: {
+      updateMany: async () => ({ count: 0 }),
+      findFirst: async () => {
+        fetched = true;
+        return null;
+      },
+    },
+  } as unknown as PrismaClient;
+  const service = createAssignmentsService(prisma);
+
+  assert.equal(await service.complete("missing", "student-1"), undefined);
+  assert.equal(fetched, false);
 });

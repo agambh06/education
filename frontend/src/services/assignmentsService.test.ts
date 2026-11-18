@@ -1,10 +1,30 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { appConfig } from "../config";
-import { assignments } from "../data/mockData";
-import { commonStrings } from "../shared/strings/common";
+import type { Assignment } from "../types/domain";
 import { assignmentsService } from "./assignmentsService";
 
 afterEach(() => vi.unstubAllGlobals());
+
+const apiAssignment = {
+  id: "assignment-1",
+  studentId: "student-1",
+  studentName: "Noa Cohen",
+  subject: "Math",
+  teacher: "Yael Levi",
+  title: "Fractions practice",
+  dueAt: "2026-11-20T09:00:00.000Z",
+  status: "TODO" as const,
+  description: "Complete questions 1–12.",
+};
+
+const assignment: Assignment = {
+  ...apiAssignment,
+  dueLabel: new Intl.DateTimeFormat("he-IL", { dateStyle: "medium", timeStyle: "short" }).format(
+    new Date(apiAssignment.dueAt),
+  ),
+  status: "לביצוע",
+  tone: "blue",
+};
 
 describe("assignments service", () => {
   it("keeps a list request pending until the API response arrives", async () => {
@@ -26,14 +46,15 @@ describe("assignments service", () => {
     });
     await Promise.resolve();
     expect(settled).not.toHaveBeenCalled();
-    respond(Response.json(assignments));
-    await expect(request).resolves.toEqual(assignments);
+    respond(Response.json([apiAssignment]));
+    await expect(request).resolves.toEqual([assignment]);
     expect(settled).toHaveBeenCalledOnce();
   });
 
   it("sends the completion PATCH request and returns the updated assignment", async () => {
-    const completed = { ...assignments[0], status: commonStrings.completed };
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(Response.json(completed));
+    const completedApiAssignment = { ...apiAssignment, status: "COMPLETED" as const };
+    const completed = { ...assignment, status: "הושלם" as const };
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(Response.json(completedApiAssignment));
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(assignmentsService.markComplete(completed.id)).resolves.toEqual(completed);
