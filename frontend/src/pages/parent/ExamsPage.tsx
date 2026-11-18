@@ -1,83 +1,57 @@
-import { Badge, Box, Button, Card, Flex, Group, Paper, Stack, Text, Title } from "@mantine/core";
-import { IconArrowLeft, IconCalendarEvent, IconClock, IconMapPin, IconTarget } from "@tabler/icons-react";
+import { Alert, Badge, Box, Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
 import { PageHeader } from "../../components/ui/PageHeader";
-import { exams } from "../../data/mockData";
+import type { Exam } from "../../types/domain";
 import { parentStrings } from "./strings";
-export function ExamsPage() {
+
+interface Props {
+  exams: Exam[];
+  loading: boolean;
+  error: boolean;
+}
+
+export function ExamsPage({ exams, loading, error }: Props) {
+  const strings = parentStrings.exams;
   return (
     <Stack gap="lg" miw={0}>
-      <PageHeader {...parentStrings.exams} />
-      <Card bg="violet.7" c="white" radius="lg" p={{ base: "md", sm: "xl" }}>
-        <Group justify="space-between" wrap="nowrap">
-          <Box miw={0}>
-            <Badge color="violet.1" c="violet.9">
-              {parentStrings.exams.inTwoDays}
-            </Badge>
-            <Title order={2} mt="md">
-              {parentStrings.exams.featuredTitle}
-            </Title>
-            <Text c="violet.1" mt="xs">
-              {parentStrings.exams.featuredDetails}
-            </Text>
-            <Group mt="lg" gap="lg">
-              <Group gap={6}>
-                <IconCalendarEvent size={16} stroke={1.75} aria-hidden="true" />
-                <Text>{parentStrings.exams.featuredDate}</Text>
-              </Group>
-              <Group gap={6}>
-                <IconClock size={16} stroke={1.75} aria-hidden="true" />
-                <Text>{parentStrings.exams.featuredTime}</Text>
-              </Group>
-              <Group gap={6}>
-                <IconMapPin size={16} stroke={1.75} aria-hidden="true" />
-                <Text>{parentStrings.exams.featuredLocation}</Text>
-              </Group>
-            </Group>
-            <Button
-              color="white"
-              c="violet.8"
-              mt="lg"
-              rightSection={<IconArrowLeft size={18} stroke={1.75} aria-hidden="true" />}
+      <PageHeader {...strings} />
+      {loading ? (
+        <Stack aria-label={strings.loading}>
+          <Skeleton height={72} />
+          <Skeleton height={72} />
+        </Stack>
+      ) : error ? (
+        <Alert color="red" role="alert">
+          {strings.error}
+        </Alert>
+      ) : exams.length === 0 ? (
+        <Paper withBorder p="lg">
+          <Text c="dimmed">{strings.empty}</Text>
+        </Paper>
+      ) : (
+        <Paper withBorder radius="md">
+          {exams.map((exam) => (
+            <Group
+              key={exam.id}
+              justify="space-between"
+              p="lg"
+              wrap="nowrap"
+              style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
             >
-              {parentStrings.exams.studyMaterials}
-            </Button>
-          </Box>
-          <Box opacity={0.2}>
-            <IconTarget size={120} stroke={1.75} aria-hidden="true" />
-          </Box>
-        </Group>
-      </Card>
-      <Paper withBorder radius="md">
-        {exams.map((exam) => (
-          <Flex
-            key={exam.id}
-            direction={{ base: "column", xs: "row" }}
-            align={{ base: "stretch", xs: "center" }}
-            justify="space-between"
-            gap="md"
-            p={{ base: "md", sm: "lg" }}
-            style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
-          >
-            <Group wrap="nowrap" miw={0}>
-              <Text fw={800} fz="xl" style={{ flexShrink: 0 }}>
-                {exam.dateLabel.split(" ")[0]}
-              </Text>
-              <Box miw={0}>
-                <Text c="dimmed" size="xs">
-                  {exam.subject} · {parentStrings.exams.studentName}
-                </Text>
-                <Text fw={700}>{exam.title}</Text>
-                <Text c="dimmed" size="sm">
-                  {exam.teacher} · {exam.time}
-                </Text>
-              </Box>
+              <Group wrap="nowrap">
+                <Badge variant="light">{exam.subject}</Badge>
+                <Box>
+                  <Text fw={700}>{exam.title}</Text>
+                  {exam.classId && (
+                    <Text c="dimmed" size="sm">
+                      {strings.class} {exam.classId}
+                    </Text>
+                  )}
+                </Box>
+              </Group>
             </Group>
-            <Button variant="light" mih={{ base: 44, sm: 36 }} style={{ flexShrink: 0 }}>
-              {parentStrings.exams.materials}
-            </Button>
-          </Flex>
-        ))}
-      </Paper>
+          ))}
+        </Paper>
+      )}
     </Stack>
   );
 }

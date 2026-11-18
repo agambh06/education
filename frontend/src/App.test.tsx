@@ -87,6 +87,21 @@ let assignmentResponses = initialAssignments.map((assignment) => ({
         ? ("COMPLETED" as const)
         : ("OVERDUE" as const),
 }));
+const examResponses = [
+  {
+    id: "exam-1",
+    title: "Fractions",
+    subject: "Math",
+    classId: "6a",
+    studentId: "student-1",
+    published: true,
+    topics: [],
+    studyTasks: [
+      { id: "task-1", title: "Review halves", scheduledFor: "Today", durationMins: 20, completed: true },
+      { id: "task-2", title: "Practice thirds", scheduledFor: "Tomorrow", durationMins: 20, completed: false },
+    ],
+  },
+];
 
 function mockParentProgress(
   children: ParentLinkedChild[],
@@ -95,6 +110,7 @@ function mockParentProgress(
   const fetchMock = vi.fn<typeof fetch>(async (input) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (url.endsWith("/auth/me")) return Response.json({ user: activeUser });
+    if (url.endsWith("/exams")) return Response.json(examResponses);
     if (url.endsWith("/assignments")) return Response.json(assignmentResponses);
     const completing = url.match(/\/assignments\/([^/]+)\/complete$/);
     if (completing) {
@@ -237,6 +253,18 @@ describe("assignment flows", () => {
     expect(await screen.findByText(studentStrings.completionSummary(2, 4))).toBeVisible();
     expect(within(tasks).getAllByRole("button", { name: commonStrings.done })).toHaveLength(1);
     expect(screen.getByText(initialAssignments[0].title)).toBeVisible();
+  });
+});
+
+describe("exam data", () => {
+  it("loads the authenticated student's exams and shows task-based preparation progress", async () => {
+    activeUser = users.STUDENT;
+    mockParentProgress([]);
+
+    await renderApp();
+
+    expect(await screen.findByText("Math: Fractions")).toBeVisible();
+    expect(screen.getByText(studentStrings.preparation(50))).toBeVisible();
   });
 });
 

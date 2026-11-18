@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { CreateAssignmentModal } from "./components/assignments/CreateAssignmentModal";
 import { assignmentStrings } from "./components/assignments/strings";
 import { ALL_STUDENTS_ID } from "./constants/app";
-import { classes, exams, students } from "./data/mockData";
+import { classes, students } from "./data/mockData";
+import { useExams } from "./hooks/useExams";
 import { useAssignments } from "./hooks/useAssignments";
 import { AppLayout } from "./layouts/AppLayout";
 import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
@@ -55,6 +56,7 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const [filter, setFilter] = useState<"הכול" | AssignmentStatus>(commonStrings.all);
   const [showCreate, setShowCreate] = useState(false);
+  const examState = useExams(role === "student");
   const { visibleItems, complete, loading, error, reload } = useAssignments(ALL_STUDENTS_ID, filter);
 
   const markComplete = async (id: string) => {
@@ -64,9 +66,15 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
   };
   const content =
     role === "parent" ? (
-      renderParentPage(page, visibleItems, filter, setFilter, markComplete, loading, error, reload)
+      renderParentPage(page, visibleItems, filter, setFilter, markComplete, loading, error, reload, examState)
     ) : role === "student" ? (
-      <StudentDashboardPage assignments={visibleItems} exams={exams} onComplete={markComplete} />
+      <StudentDashboardPage
+        assignments={visibleItems}
+        exams={examState.exams}
+        examsLoading={examState.loading}
+        examsError={examState.error}
+        onComplete={markComplete}
+      />
     ) : role === "teacher" ? (
       <TeacherDashboardPage classes={classes} onCreate={() => setShowCreate(true)} />
     ) : (
@@ -109,6 +117,7 @@ function renderParentPage(
   loading: boolean,
   error: string | null,
   reload: () => void,
+  examState: ReturnType<typeof useExams>,
 ) {
   if (page === "משימות")
     return (
@@ -123,7 +132,7 @@ function renderParentPage(
         onRetry={reload}
       />
     );
-  if (page === "מבחנים") return <ExamsPage />;
+  if (page === "מבחנים") return <ExamsPage {...examState} />;
   if (page === "לוח שנה") return <CalendarPage />;
   if (page === "הודעות") return <MessagesPage />;
   if (page === appStrings.settings) return <LearningRemindersPage />;

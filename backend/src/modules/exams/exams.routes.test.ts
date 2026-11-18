@@ -73,6 +73,22 @@ describe("exam preparation API", () => {
     expect(examSchema.parse(preparation.body).studyTasks).toEqual([{ ...task, completed: true }]);
   });
 
+  it("filters exams by class without allowing parents to read student exam data", async () => {
+    const published = await request(app)
+      .post("/api/exams")
+      .send({ title: "Fractions", subject: "Math", classId: "6b" })
+      .expect(201);
+
+    await request(app).get("/api/exams").query({ classId: "6b" }).expect(200, [published.body]);
+    await request(app).get("/api/exams").query({ classId: "unknown" }).expect(200, []);
+
+    const { createApp } = await import("../../app.js");
+    const parentApp = createApp({
+      resolveAuthenticatedUser: async () => ({ userId: "parent-user", role: "PARENT" }),
+    });
+    await request(parentApp).get("/api/exams").query({ classId: "6b" }).expect(403, { message: "Student access required" });
+  });
+
   it.each([
     {},
     { title: "", subject: "Math", classId: "6a", studentId: "noa" },

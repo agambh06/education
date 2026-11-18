@@ -47,12 +47,20 @@ export interface Assignment {
 }
 export interface Exam {
   id: string;
-  studentId: string;
-  subject: string;
   title: string;
-  teacher: string;
-  dateLabel: string;
-  time: string;
+  subject: string;
+  classId?: string;
+  studentId: string;
+  published: boolean;
+  topics: string[];
+  studyTasks: ExamStudyTask[];
+}
+export interface ExamStudyTask {
+  id: string;
+  title: string;
+  scheduledFor: string;
+  durationMins: number;
+  completed: boolean;
 }
 export interface Message {
   id: string;

@@ -14,12 +14,13 @@ const studyTaskSchema = z.object({
   scheduledFor: z.string().min(1),
   durationMins: z.number().int().positive(),
 });
-examsRouter.get("/", (_request, response) => {
+examsRouter.get("/", (request, response) => {
   const principal = getPrincipal(response);
   if (!principal?.studentId || principal.role !== "STUDENT") {
     return response.status(403).json({ message: "Student access required" });
   }
-  return response.json(examsService.list(principal.studentId));
+  const classId = typeof request.query.classId === "string" ? request.query.classId : undefined;
+  return response.json(examsService.list(principal.studentId, classId));
 });
 examsRouter.post("/", (request, response) => {
   const parsed = createExamSchema.safeParse(request.body);

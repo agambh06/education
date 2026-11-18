@@ -177,18 +177,29 @@ test("role dashboards render SVG greetings, statistics and actions with readable
   }
 });
 
-test("parent exam metadata, material links and summary download use vector icons", async () => {
+test("parent exam API view shows loading, error, empty and exam data states", async () => {
   const v = await views;
-  const exams = v.render(v.ExamsPage);
-  assertIcons(exams, ["calendar-event", "clock", "map-pin", "target", "arrow-left"]);
-  for (const label of [
-    v.parentStrings.exams.featuredDate,
-    v.parentStrings.exams.featuredTime,
-    v.parentStrings.exams.featuredLocation,
-    v.parentStrings.exams.studyMaterials,
-  ]) {
-    assert.ok(exams.includes(label), label);
-  }
+  assert.ok(v.render(v.ExamsPage, { exams: [], loading: true, error: false }).includes(v.parentStrings.exams.loading));
+  assert.ok(v.render(v.ExamsPage, { exams: [], loading: false, error: true }).includes(v.parentStrings.exams.error));
+  assert.ok(v.render(v.ExamsPage, { exams: [], loading: false, error: false }).includes(v.parentStrings.exams.empty));
+  const exams = v.render(v.ExamsPage, {
+    exams: [
+      {
+        id: "exam-1",
+        title: "Fractions",
+        subject: "Math",
+        classId: "6a",
+        studentId: "student-1",
+        published: true,
+        topics: [],
+        studyTasks: [],
+      },
+    ],
+    loading: false,
+    error: false,
+  });
+  assert.ok(exams.includes("Fractions"));
+  assert.ok(exams.includes("Math"));
   const assignments = v.render(v.AssignmentsPage, {
     assignments: [assignment],
     students: [],

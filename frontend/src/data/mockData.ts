@@ -1,4 +1,4 @@
-import type { Exam, Message, Parent, SchoolClass, Student, Teacher } from "../types/domain";
+import type { Message, Parent, SchoolClass, Student, Teacher } from "../types/domain";
 export const currentParent: Parent = {
   id: "parent-1",
   firstName: "אגם",
@@ -26,26 +26,6 @@ export const classes: SchoolClass[] = [
   { id: "6a", name: "מתמטיקה · כיתה ו׳1", studentCount: 28 },
   { id: "6b", name: "מתמטיקה · כיתה ו׳2", studentCount: 26 },
   { id: "5a", name: "סדנת מתמטיקה · כיתה ה׳", studentCount: 24 },
-];
-export const exams: Exam[] = [
-  {
-    id: "e1",
-    studentId: "noa",
-    subject: "מדעים",
-    title: "מערכת השמש",
-    teacher: "המורה רובין",
-    dateLabel: "13 במרץ",
-    time: "10:30",
-  },
-  {
-    id: "e2",
-    studentId: "noa",
-    subject: "מתמטיקה",
-    title: "שברים ומספרים עשרוניים",
-    teacher: "המורה לוי",
-    dateLabel: "19 במרץ",
-    time: "09:00",
-  },
 ];
 export const messages: Message[] = [
   {
