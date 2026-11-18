@@ -7,13 +7,12 @@ interface Props {
   exams: Exam[];
   loading: boolean;
   error: boolean;
-  studentName?: string;
 }
 
-export function ExamsPage({ exams, loading, error, studentName }: Props) {
+export function ExamsPage({ exams, loading, error }: Props) {
   const strings = parentStrings.exams;
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" miw={0}>
       <PageHeader {...strings} />
       {loading ? (
         <Stack aria-label={strings.loading}>
@@ -42,12 +41,9 @@ export function ExamsPage({ exams, loading, error, studentName }: Props) {
                 <Badge variant="light">{exam.subject}</Badge>
                 <Box>
                   <Text fw={700}>{exam.title}</Text>
-                  <Text c="dimmed" size="sm">
-                    {studentName ? strings.student(studentName) : `${strings.class} ${exam.classId}`}
-                  </Text>
-                  {exam.topics.length > 0 && (
+                  {exam.classId && (
                     <Text c="dimmed" size="sm">
-                      {exam.topics.join(" · ")}
+                      {strings.class} {exam.classId}
                     </Text>
                   )}
                 </Box>

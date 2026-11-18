@@ -9,7 +9,7 @@ export interface DemoExam {
   id: string;
   title: string;
   subject: string;
-  classId: string;
+  classId?: string;
   studentId: string;
   published: boolean;
   topics: string[];
@@ -31,11 +31,11 @@ const exams: DemoExam[] = [
   },
 ];
 export const examsService = {
-  list: ({ studentId, classId }: { studentId?: string; classId?: string } = {}) =>
+  list: (studentId: string, classId?: string) =>
     exams.filter(
       (exam) =>
         exam.published &&
-        (!studentId || exam.studentId === studentId) &&
+        exam.studentId === studentId &&
         (!classId || exam.classId === classId),
     ),
   publish: (exam: Omit<DemoExam, "id" | "published" | "studyTasks">) => {
@@ -43,7 +43,7 @@ export const examsService = {
     exams.push(created);
     return created;
   },
-  get: (id: string) => exams.find((exam) => exam.id === id),
+  get: (id: string, studentId: string) => exams.find((exam) => exam.id === id && exam.studentId === studentId),
   addStudyTask: (examId: string, task: Omit<DemoStudyTask, "id" | "completed">) => {
     const exam = exams.find((item) => item.id === examId);
     if (!exam) return undefined;

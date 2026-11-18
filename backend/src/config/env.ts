@@ -1,11 +1,16 @@
 import "dotenv/config";
 import { z } from "zod";
 
-const envSchema = z.object({
+export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
-  DATABASE_URL: z.string().url(),
-  CORS_ORIGIN: z.string().url().default("http://localhost:5173"),
+  DATABASE_URL: z.string().url().optional(),
+  CORS_ORIGIN: z
+    .string()
+    .url()
+    .transform((origin) => origin.replace(/\/+$/, ""))
+    .default(process.env.NODE_ENV === "production" ? "https://education-8mju.vercel.app" : "http://localhost:5173"),
+  AUTH_COOKIE_SAME_SITE: z.enum(["lax", "none"]).default("lax"),
 });
 
 export const env = envSchema.parse(process.env);

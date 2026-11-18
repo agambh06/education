@@ -35,9 +35,11 @@ export interface SchoolClass {
 export interface Assignment {
   id: string;
   studentId: string;
+  studentName: string;
   subject: string;
   teacher: string;
   title: string;
+  dueAt: string;
   dueLabel: string;
   status: AssignmentStatus;
   description: string;
@@ -47,7 +49,7 @@ export interface Exam {
   id: string;
   title: string;
   subject: string;
-  classId: string;
+  classId?: string;
   studentId: string;
   published: boolean;
   topics: string[];
